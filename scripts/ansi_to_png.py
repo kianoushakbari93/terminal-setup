@@ -127,6 +127,7 @@ def main(argv=None):
     ap.add_argument("--bold")
     ap.add_argument("--size", type=int, default=28)
     ap.add_argument("--bg", default="#1e1e2e")
+    ap.add_argument("--pad", type=int, default=24, help="canvas padding in px")
     ap.add_argument("--out", required=True)
     ap.add_argument("--input")
     args = ap.parse_args(argv)
@@ -144,7 +145,7 @@ def main(argv=None):
     cell_h = int(args.size * 1.34)
 
     rows = parse_cells(text, default_fg, default_bg)
-    img = render(rows, font, bold_font, cell_w, cell_h, default_bg)
+    img = render(rows, font, bold_font, cell_w, cell_h, default_bg, pad=args.pad)
     img.save(args.out)
     print(f"wrote {args.out} ({img.width}x{img.height})")
 
