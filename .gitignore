@@ -10,3 +10,7 @@ __pycache__/
 
 # Lavish working files
 .lavish/
+
+# Local design notes / issue tracker (not part of the shipped tool)
+docs/designs/
+docs/issues/
