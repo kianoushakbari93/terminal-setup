@@ -1,0 +1,25 @@
+---
+# Install each Nerd Font idempotently (Homebrew cask on macOS; download + cache
+# refresh on Linux).
+- name: Install Nerd Fonts
+  font_install:
+    name: "{{ item }}"
+  loop: "{{ ts_fonts }}"
+  loop_control:
+    label: "{{ item }}"
+  tags: [fonts_install]
+
+# Health probe: a check-mode re-run reports `changed` only if a font is still not
+# discoverable, so failing on changed proves every font installed correctly.
+- name: Verify fonts are discoverable
+  font_install:
+    name: "{{ item }}"
+  check_mode: true
+  register: ts_font_probe
+  failed_when: ts_font_probe.changed
+  loop: "{{ ts_fonts }}"
+  loop_control:
+    label: "{{ item }}"
+  # In check mode no install ran, so post-install verification is meaningless.
+  when: not ansible_check_mode
+  tags: [fonts_verify]

@@ -1,0 +1,8 @@
+---
+# Test fixture: apply ONLY the fonts role. Override ts_fonts via --extra-vars to
+# avoid installing fonts that are not already present on the test host.
+- name: Apply fonts role in isolation
+  hosts: localhost
+  gather_facts: false
+  roles:
+    - role: fonts

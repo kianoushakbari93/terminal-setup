@@ -1,0 +1,149 @@
+##############################
+#   TMUX CONFIG - terminal-setup
+##############################
+
+# ---------------------------
+# 0. Performance / Terminal
+# ---------------------------
+set -g default-terminal "tmux-256color"
+set -ga terminal-overrides ",*256col*:Tc,xterm-256color:Tc"
+set -s escape-time 0
+set -g focus-events on
+set -g history-limit 50000
+set -g display-time 1500
+
+# ---------------------------
+# 1. Plugins (declared for TPM install/update)
+# ---------------------------
+set -g @plugin 'tmux-plugins/tpm'
+set -g @plugin 'tmux-plugins/tmux-sensible'
+set -g @plugin 'tmux-plugins/tmux-yank'
+set -g @plugin 'catppuccin/tmux'
+set -g @plugin 'tmux-plugins/tmux-battery'
+
+# ---------------------------
+# 2. Prefix Key
+# ---------------------------
+unbind C-b
+set-option -g prefix C-a
+bind-key C-a send-prefix
+
+# ---------------------------
+# 3. Pane Splits
+# ---------------------------
+unbind '"'
+unbind %
+bind | split-window -h
+bind - split-window -v
+
+# ---------------------------
+# 4. Reload Config
+# ---------------------------
+bind r source-file ~/.tmux.conf \; display-message "Config reloaded!"
+
+# ---------------------------
+# 5. Pane Navigation
+# ---------------------------
+bind -n M-Left select-pane -L
+bind -n M-Right select-pane -R
+bind -n M-Up select-pane -U
+bind -n M-Down select-pane -D
+
+# ---------------------------
+# 6. Mouse Support
+# ---------------------------
+set -g mouse on
+{% raw %}
+set -g @legacy_scroll_cmds "nano less more man git"
+
+bind-key -T root WheelUpPane \
+    if-shell -Ft= '#{?mouse_any_flag,1,#{pane_in_mode}}' \
+        'send -Mt=' \
+        'if-shell -t= "#{?alternate_on,true,false} || echo \"#{@legacy_scroll_cmds}\" | grep -q \"#{pane_current_command}\"" \
+            "send -t= Up" "copy-mode -et="'
+
+bind-key -T root WheelDownPane \
+    if-shell -Ft= '#{?pane_in_mode,1,#{mouse_any_flag}}' \
+        'send -Mt=' \
+        'if-shell -t= "#{?alternate_on,true,false} || echo \"#{@legacy_scroll_cmds}\" | grep -q \"#{pane_current_command}\"" \
+            "send -t= Down" "send -Mt="'
+{% endraw %}
+# ---------------------------
+# 7. Window & Pane Indexing
+# ---------------------------
+set -g base-index 1
+setw -g pane-base-index 1
+set-option -g allow-rename off
+set -g renumber-windows on
+
+# ---------------------------
+# 8. Visual Settings
+# ---------------------------
+set -g visual-activity off
+set -g visual-bell off
+set -g visual-silence off
+setw -g monitor-activity off
+set -g bell-action none
+
+# ===========================================================
+# 9. Catppuccin Status Bar (palette/flavor from vars)
+# ===========================================================
+set -g @catppuccin_flavor '{{ ts_tmux_flavor }}'
+
+# Transparent status-bar background: empty bar follows terminal transparency.
+set -g @catppuccin_status_background '#{l:default}'
+
+set -g @catppuccin_window_status_style 'rounded'
+set -g @catppuccin_window_number_position 'left'
+set -g @catppuccin_window_text ' #W'
+set -g @catppuccin_window_current_text ' #W'
+set -g @catppuccin_window_flags 'icon'
+
+set -g @catppuccin_date_time_text ' %Y-%m-%d %H:%M '
+set -g @catppuccin_session_text ' #S '
+
+set -g status-position bottom
+set -g status-justify left
+set -g status-interval 5
+set -g status-left-length 100
+set -g status-right-length 200
+
+# --- Load catppuccin now so its status variables are defined ---
+run '~/.tmux/plugins/tmux/catppuccin.tmux'
+
+# Transparent bar background (bg=default -> follows terminal transparency).
+set -g  status-bg                    "default"
+set -gF status-fg                    "#{@thm_fg}"
+set -gF status-style                 "bg=default,fg=#{@thm_fg}"
+set -gF window-status-style          "bg=default,fg=#{@thm_fg}"
+set -gF window-status-current-style  "bg=default,fg=#{@thm_fg}"
+set -g  window-status-separator      ''
+
+set -g status-left ''
+
+# Right side: {{ 'battery -> ' if ts_tmux_has_battery else 'cpu spacer -> ' }}date/time -> session
+set -g status-right ''
+{% if ts_tmux_has_battery %}
+set -agF status-right '#{E:@catppuccin_status_battery}'
+{% else %}
+# Batteryless host: battery would render empty, so use a CPU load spacer instead.
+set -ag status-right '#[fg=#{@thm_fg}] #(uptime | sed "s/.*load average[s]*: //") '
+{% endif %}
+set -ag  status-right '#{E:@catppuccin_status_date_time}'
+set -ag  status-right '#{E:@catppuccin_status_session}'
+
+# ---------------------------
+# 10. Initialize TPM (keep at very bottom; loads tmux-battery)
+# ---------------------------
+run '~/.tmux/plugins/tpm/tpm'
+
+# ===========================================================
+# 11. Transparent rounded window-tab pills (override catppuccin)
+#     Direct-colour caps on transparent cells. Glyphs via the glyph filter so
+#     they are never stripped empty.  caps: left U+E0B6 / right U+E0B4
+# ===========================================================
+set -g window-status-separator ' '
+
+set -g window-status-format "#[fg={{ ts_tmux_palette.overlay2 }},bg=default]{{ 'left_half_circle' | glyph }}#[fg={{ ts_tmux_palette.crust }},bg={{ ts_tmux_palette.overlay2 }}] #I #[fg={{ ts_tmux_palette.text }},bg={{ ts_tmux_palette.surface0 }}] #W #[fg={{ ts_tmux_palette.surface0 }},bg=default]{{ 'right_half_circle' | glyph }}"
+
+set -g window-status-current-format "#[fg={{ ts_tmux_palette.mauve }},bg=default]{{ 'left_half_circle' | glyph }}#[fg={{ ts_tmux_palette.crust }},bg={{ ts_tmux_palette.mauve }}] #I #[fg={{ ts_tmux_palette.text }},bg={{ ts_tmux_palette.surface1 }}] #W#{?window_zoomed_flag, {{ 'zoom' | glyph }},} #[fg={{ ts_tmux_palette.surface1 }},bg=default]{{ 'right_half_circle' | glyph }}"

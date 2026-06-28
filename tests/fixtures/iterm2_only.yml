@@ -1,0 +1,6 @@
+---
+- name: Apply iterm2 role in isolation
+  hosts: localhost
+  gather_facts: true
+  roles:
+    - role: iterm2

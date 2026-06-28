@@ -1,0 +1,8 @@
+---
+# Test fixture: apply ONLY the configs role, driven by ts_managed_configs passed
+# via --extra-vars. Used to exercise the role against throwaway targets.
+- name: Apply configs role in isolation
+  hosts: localhost
+  gather_facts: false
+  roles:
+    - role: configs

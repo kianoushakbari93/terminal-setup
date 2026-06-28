@@ -1,0 +1,10 @@
+---
+# Test fixture: apply ONLY the zsh role. Override ts_zsh_rc/ts_zsh_p10k/
+# ts_zsh_zdotdir via --extra-vars to deploy into a throwaway directory.
+- name: Apply zsh role in isolation
+  hosts: localhost
+  gather_facts: false
+  vars:
+    ansible_user_dir: "{{ lookup('env', 'HOME') }}"
+  roles:
+    - role: zsh

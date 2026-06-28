@@ -1,0 +1,6 @@
+# Development / test dependencies for the Terminal Setup tooling.
+# Install into a venv:  python3 -m venv .venv && . .venv/bin/activate && pip install -r requirements-dev.txt
+ansible-core>=2.15
+pytest>=8.0
+# screenshot tooling (scripts/ansi_to_png.py, scripts/tmux_bar_capture.py)
+Pillow>=10.0

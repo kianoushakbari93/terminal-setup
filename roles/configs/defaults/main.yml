@@ -1,0 +1,11 @@
+---
+# List of config files this role manages. Each entry:
+#   target:       path to the config file (required)
+#   content:      managed-block body (required)
+#   local_suffix: sibling file suffix (optional, default ".local")
+#   source_line:  how the block sources .local (optional; shell guard by default)
+#   backup_root:  where backups/manifest live (optional)
+#
+# Empty by default so a real run is a safe no-op; the shell slices (4/5/6)
+# populate this with the actual zsh/bash/tmux configs.
+ts_managed_configs: []

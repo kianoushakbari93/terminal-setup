@@ -1,0 +1,8 @@
+---
+- name: Apply tmux role in isolation
+  hosts: localhost
+  gather_facts: false
+  vars:
+    ansible_user_dir: "{{ lookup('env', 'HOME') }}"
+  roles:
+    - role: tmux

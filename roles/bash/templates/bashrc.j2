@@ -1,0 +1,94 @@
+# =========================================
+#  ~/.bashrc - managed by terminal-setup
+#  Clean bash: ble.sh + starship (Dracula)
+# =========================================
+
+# 0. Only configure interactive shells
+case $- in
+  *i*) ;;
+    *) return ;;
+esac
+
+# 1. Auto-start tmux (replaces this shell; keep above everything else)
+if command -v tmux &> /dev/null && [ -z "$TMUX" ] \
+   && [[ ! "$TERM" =~ (screen|tmux) ]] && [ "$TERM_PROGRAM" != "vscode" ]; then
+  exec tmux new-session -A -s default
+fi
+
+# 2. ble.sh (Bash Line Editor) - load at the top with --noattach,
+#    then attach at the very bottom (required ordering).
+[[ -r ~/.local/share/blesh/ble.sh ]] && source ~/.local/share/blesh/ble.sh --noattach
+
+# 3. PATH (match zsh: GNU sed first, then ~/.local/bin)
+export PATH="{{ ts_brew_prefix }}/opt/gnu-sed/libexec/gnubin:$HOME/.local/bin:$PATH"
+
+# 4. History
+HISTFILE="$HOME/.bash_history"
+HISTSIZE=50000
+HISTFILESIZE=50000
+HISTCONTROL=ignoreboth:erasedups
+shopt -s histappend cmdhist checkwinsize
+shopt -s autocd 2>/dev/null
+shopt -s globstar 2>/dev/null
+
+# 5. Programmable completion (bash-completion@2)
+if [[ -r {{ ts_brew_prefix }}/etc/profile.d/bash_completion.sh ]]; then
+  . {{ ts_brew_prefix }}/etc/profile.d/bash_completion.sh
+fi
+
+# 6. Prompt: starship (Dracula theme -> ~/.config/starship.toml)
+if command -v starship &> /dev/null; then
+  eval "$(starship init bash)"
+fi
+
+# 7. Aliases & functions
+[[ -f ~/.aliases ]] && . ~/.aliases
+
+# 8. ble.sh appearance (Dracula) + behaviour
+#    Valid command -> green, invalid command -> red. Faded autosuggestions.
+if [[ ${BLE_VERSION-} ]]; then
+  bleopt complete_auto_complete=1
+  bleopt complete_ambiguous=1
+  bleopt complete_menu_complete=1
+  bleopt complete_menu_style=desc
+
+  # Valid commands -> green
+  ble-face -s command_builtin     'fg={{ ts_bash_palette.green }}'
+  ble-face -s command_builtin_dot 'fg={{ ts_bash_palette.green }}'
+  ble-face -s command_function    'fg={{ ts_bash_palette.green }}'
+  ble-face -s command_alias       'fg={{ ts_bash_palette.green }}'
+  ble-face -s command_file        'fg={{ ts_bash_palette.green }}'
+  ble-face -s command_jobs        'fg={{ ts_bash_palette.green }}'
+  ble-face -s command_keyword     'fg={{ ts_bash_palette.pink }}'
+  ble-face -s command_directory   'fg={{ ts_bash_palette.cyan }}'
+  # Invalid / unknown command -> red
+  ble-face -s syntax_error        'fg={{ ts_bash_palette.red }},bold'
+  # Other syntax (Dracula)
+  ble-face -s syntax_command          'fg={{ ts_bash_palette.green }}'
+  ble-face -s syntax_comment          'fg={{ ts_bash_palette.comment }},italic'
+  ble-face -s syntax_quoted           'fg={{ ts_bash_palette.yellow }}'
+  ble-face -s syntax_quotation        'fg={{ ts_bash_palette.yellow }}'
+  ble-face -s syntax_escape           'fg={{ ts_bash_palette.pink }}'
+  ble-face -s syntax_varname          'fg={{ ts_bash_palette.purple }}'
+  ble-face -s syntax_param_expansion  'fg={{ ts_bash_palette.purple }}'
+  ble-face -s syntax_history_expansion 'fg={{ ts_bash_palette.purple }}'
+  ble-face -s syntax_glob             'fg={{ ts_bash_palette.orange }}'
+  ble-face -s syntax_brace            'fg={{ ts_bash_palette.pink }}'
+  ble-face -s syntax_tilde            'fg={{ ts_bash_palette.orange }}'
+  ble-face -s syntax_delimiter        'fg={{ ts_bash_palette.fg }}'
+  ble-face -s argument_option         'fg={{ ts_bash_palette.orange }}'
+  ble-face -s filename_directory      'fg={{ ts_bash_palette.cyan }},underline'
+  ble-face -s filename_executable     'fg={{ ts_bash_palette.green }}'
+  ble-face -s filename_link           'fg={{ ts_bash_palette.cyan }}'
+  ble-face -s filename_orphan         'fg={{ ts_bash_palette.red }}'
+  # Faded autosuggestion
+  ble-face -s auto_complete           'fg={{ ts_bash_palette.comment }}'
+  # Selection / completion menu
+  ble-face -s region                  'bg={{ ts_bash_palette.surface }}'
+  ble-face -s region_target           'bg={{ ts_bash_palette.surface }},fg={{ ts_bash_palette.fg }}'
+  ble-face -s menu_complete_selected  'fg={{ ts_bash_palette.base }},bg={{ ts_bash_palette.purple }}'
+  ble-face -s menu_filter_fixed       'fg={{ ts_bash_palette.green }},bold'
+fi
+
+# 9. Attach ble.sh (keep at the very bottom)
+[[ ${BLE_VERSION-} ]] && ble-attach

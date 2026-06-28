@@ -1,0 +1,135 @@
+"$schema" = 'https://starship.rs/config-schema.json'
+
+# =============================================================================
+#  starship.toml - Dracula theme (bash). Sharp-triangle powerline ribbon,
+#  distinct from zsh's Catppuccin round pills. Rendered by terminal-setup;
+#  glyphs injected via the `glyph` filter so they are never stripped empty.
+#    separators:  right triangle U+E0B0  |  left triangle U+E0B2
+# =============================================================================
+
+add_newline = true
+palette = 'dracula'
+
+format = """
+[{{ "right_triangle" | glyph }}](purple)\
+$username\
+[{{ "right_triangle" | glyph }}](fg:purple bg:cyan)\
+$directory\
+[{{ "right_triangle" | glyph }}](fg:cyan bg:pink)\
+$git_branch\
+$git_status\
+[{{ "right_triangle" | glyph }}](fg:pink bg:green)\
+$nodejs$python$golang$rust$java$lua$php$c\
+[{{ "right_triangle" | glyph }}](fg:green)\
+$fill\
+$cmd_duration\
+[{{ "left_triangle" | glyph }}](fg:surface)\
+$time\
+$line_break\
+$character"""
+
+[palettes.dracula]
+base    = '{{ ts_bash_palette.base }}'
+surface = '{{ ts_bash_palette.surface }}'
+fg      = '{{ ts_bash_palette.fg }}'
+comment = '{{ ts_bash_palette.comment }}'
+cyan    = '{{ ts_bash_palette.cyan }}'
+green   = '{{ ts_bash_palette.green }}'
+orange  = '{{ ts_bash_palette.orange }}'
+pink    = '{{ ts_bash_palette.pink }}'
+purple  = '{{ ts_bash_palette.purple }}'
+red     = '{{ ts_bash_palette.red }}'
+yellow  = '{{ ts_bash_palette.yellow }}'
+
+[username]
+show_always = true
+style_user = "fg:base bg:purple"
+style_root = "fg:base bg:red"
+format = "[ {{ "user" | glyph }} $user ]($style)"
+
+[directory]
+style = "fg:base bg:cyan"
+format = "[ $path ]($style)"
+truncation_length = 3
+truncation_symbol = "…/"
+home_symbol = "~"
+read_only = " {{ "lock" | glyph }} "
+read_only_style = "fg:red bg:cyan"
+
+[git_branch]
+symbol = "{{ "git_branch" | glyph }} "
+style = "fg:base bg:pink"
+format = '[ $symbol$branch ]($style)'
+
+[git_status]
+style = "fg:base bg:pink"
+format = '[($all_status$ahead_behind )]($style)'
+conflicted = "="
+ahead = "{{ "ahead" | glyph }}${count}"
+behind = "{{ "behind" | glyph }}${count}"
+diverged = "{{ "ahead" | glyph }}${ahead_count}{{ "behind" | glyph }}${behind_count}"
+untracked = "?${count}"
+stashed = "*${count}"
+modified = "!${count}"
+staged = "+${count}"
+renamed = "»${count}"
+deleted = "{{ "cross" | glyph }}${count}"
+
+[nodejs]
+symbol = "{{ "node" | glyph }} "
+style = "fg:base bg:green"
+format = '[ $symbol($version) ]($style)'
+
+[python]
+symbol = "{{ "python" | glyph }} "
+style = "fg:base bg:green"
+format = '[ $symbol($version)( \($virtualenv\)) ]($style)'
+
+[golang]
+symbol = "{{ "golang" | glyph }} "
+style = "fg:base bg:green"
+format = '[ $symbol($version) ]($style)'
+
+[rust]
+symbol = "{{ "rust" | glyph }} "
+style = "fg:base bg:green"
+format = '[ $symbol($version) ]($style)'
+
+[java]
+symbol = "{{ "java" | glyph }} "
+style = "fg:base bg:green"
+format = '[ $symbol($version) ]($style)'
+
+[lua]
+symbol = "{{ "lua" | glyph }} "
+style = "fg:base bg:green"
+format = '[ $symbol($version) ]($style)'
+
+[php]
+symbol = "{{ "php" | glyph }} "
+style = "fg:base bg:green"
+format = '[ $symbol($version) ]($style)'
+
+[c]
+symbol = "{{ "c_lang" | glyph }} "
+style = "fg:base bg:green"
+format = '[ $symbol($version(-$name)) ]($style)'
+
+[fill]
+symbol = ' '
+
+[cmd_duration]
+min_time = 500
+style = "fg:orange"
+format = '[ {{ "duration" | glyph }} $duration ]($style)'
+
+[time]
+disabled = false
+style = "fg:fg bg:surface"
+format = '[ {{ "clock" | glyph }} $time ]($style)'
+time_format = "%H:%M:%S"
+
+[character]
+success_symbol = "[{{ "prompt_ok" | glyph }}](bold green)"
+error_symbol = "[{{ "prompt_ok" | glyph }}](bold red)"
+vimcmd_symbol = "[{{ "prompt_vicmd" | glyph }}](bold purple)"

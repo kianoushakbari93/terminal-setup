@@ -1,0 +1,6 @@
+---
+- name: Apply chsh role in isolation
+  hosts: localhost
+  gather_facts: false
+  roles:
+    - role: chsh

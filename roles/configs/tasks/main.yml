@@ -1,0 +1,16 @@
+---
+# Deploy each managed config through the self-verifying merge engine. The module
+# is idempotent and lossless: it backs up and preserves foreign user content in a
+# sibling .local file, and verifies the result before reporting success.
+- name: Merge managed config files
+  config_merge:
+    target_path: "{{ item.target }}"
+    managed_content: "{{ item.content }}"
+    local_suffix: "{{ item.local_suffix | default(omit) }}"
+    source_line: "{{ item.source_line | default(omit) }}"
+    begin_marker: "{{ item.begin_marker | default(omit) }}"
+    end_marker: "{{ item.end_marker | default(omit) }}"
+    backup_root: "{{ item.backup_root | default(ts_backup_root) }}"
+  loop: "{{ ts_managed_configs }}"
+  loop_control:
+    label: "{{ item.target }}"

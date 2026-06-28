@@ -1,0 +1,7 @@
+---
+# Nerd Fonts installed by this role. All three carry the powerline triangles/
+# semicircles and Nerd Font icons the prompts and tmux bar use.
+ts_fonts:
+  - meslo
+  - jetbrains
+  - firacode

@@ -1,0 +1,96 @@
+# =========================================
+#  ~/.zshrc - managed by terminal-setup
+#  Fast, framework-free zsh + Powerlevel10k
+# =========================================
+
+# 1. Auto-start tmux (must stay ABOVE the p10k instant-prompt block)
+if [[ -z "$TMUX" && -n "$PS1" && "$TERM_PROGRAM" != "vscode" ]]; then
+  tmux attach -t default 2>/dev/null || tmux new -s default
+fi
+
+# 2. Powerlevel10k instant prompt (keep near the top)
+if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
+  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
+fi
+
+# 3. PATH (GNU sed overrides macOS BSD sed; ~/.local/bin)
+path=("{{ ts_brew_prefix }}/opt/gnu-sed/libexec/gnubin" "$HOME/.local/bin" $path)
+export PATH
+
+# 4. Prompt: Powerlevel10k
+source {{ ts_brew_prefix }}/share/powerlevel10k/powerlevel10k.zsh-theme
+[[ -f ~/.p10k.zsh ]] && source ~/.p10k.zsh
+
+# 5. History
+HISTFILE="$HOME/.zsh_history"
+HISTSIZE=50000
+SAVEHIST=50000
+setopt EXTENDED_HISTORY INC_APPEND_HISTORY SHARE_HISTORY
+setopt HIST_IGNORE_ALL_DUPS HIST_IGNORE_SPACE HIST_FIND_NO_DUPS
+setopt HIST_REDUCE_BLANKS HIST_VERIFY
+
+# 6. Shell options & completion (fast, cached)
+setopt AUTO_CD INTERACTIVE_COMMENTS NO_BEEP
+zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
+zstyle ':completion:*' menu select
+zstyle ':completion:*' use-cache on
+zstyle ':completion:*' cache-path "${XDG_CACHE_HOME:-$HOME/.cache}/zsh/zcompcache"
+
+autoload -Uz compinit
+() {
+  local zcd="${ZDOTDIR:-$HOME}/.zcompdump"
+  local -a stale=( ${zcd}(Nmh+24) )
+  if {% raw %}(( ${#stale} )){% endraw %} || [[ ! -f "$zcd" ]]; then
+    compinit -d "$zcd"
+  else
+    compinit -C -d "$zcd"
+  fi
+  if [[ -s "$zcd" && ( ! -s "${zcd}.zwc" || "$zcd" -nt "${zcd}.zwc" ) ]]; then
+    zcompile "$zcd" &!
+  fi
+}
+
+# 7. Aliases & functions
+[[ -f "$HOME/.aliases" ]] && source "$HOME/.aliases"
+
+# 8. Autosuggestions (fish-like, async)
+ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg={{ ts_zsh_palette.overlay0 }}'
+ZSH_AUTOSUGGEST_STRATEGY=(history completion)
+ZSH_AUTOSUGGEST_MANUAL_REBIND=1
+ZSH_AUTOSUGGEST_USE_ASYNC=1
+source {{ ts_brew_prefix }}/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+
+# 9. Syntax highlighting (MUST be sourced last)
+#    Valid command -> green, invalid command -> red (Catppuccin Mocha)
+source {{ ts_brew_prefix }}/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+
+typeset -gA ZSH_HIGHLIGHT_STYLES
+ZSH_HIGHLIGHT_STYLES[default]='none'
+ZSH_HIGHLIGHT_STYLES[command]='fg={{ ts_zsh_palette.green }}'
+ZSH_HIGHLIGHT_STYLES[builtin]='fg={{ ts_zsh_palette.green }}'
+ZSH_HIGHLIGHT_STYLES[function]='fg={{ ts_zsh_palette.green }}'
+ZSH_HIGHLIGHT_STYLES[alias]='fg={{ ts_zsh_palette.green }}'
+ZSH_HIGHLIGHT_STYLES[suffix-alias]='fg={{ ts_zsh_palette.green }},underline'
+ZSH_HIGHLIGHT_STYLES[global-alias]='fg={{ ts_zsh_palette.green }}'
+ZSH_HIGHLIGHT_STYLES[hashed-command]='fg={{ ts_zsh_palette.green }}'
+ZSH_HIGHLIGHT_STYLES[precommand]='fg={{ ts_zsh_palette.green }},underline'
+ZSH_HIGHLIGHT_STYLES[unknown-token]='fg={{ ts_zsh_palette.red }},bold'
+ZSH_HIGHLIGHT_STYLES[reserved-word]='fg={{ ts_zsh_palette.mauve }}'
+ZSH_HIGHLIGHT_STYLES[commandseparator]='fg={{ ts_zsh_palette.sky }}'
+ZSH_HIGHLIGHT_STYLES[path]='fg={{ ts_zsh_palette.text }},underline'
+ZSH_HIGHLIGHT_STYLES[path_pathseparator]='fg={{ ts_zsh_palette.overlay1 }}'
+ZSH_HIGHLIGHT_STYLES[globbing]='fg={{ ts_zsh_palette.yellow }}'
+ZSH_HIGHLIGHT_STYLES[history-expansion]='fg={{ ts_zsh_palette.mauve }}'
+ZSH_HIGHLIGHT_STYLES[single-hyphen-option]='fg={{ ts_zsh_palette.sky }}'
+ZSH_HIGHLIGHT_STYLES[double-hyphen-option]='fg={{ ts_zsh_palette.sky }}'
+ZSH_HIGHLIGHT_STYLES[single-quoted-argument]='fg={{ ts_zsh_palette.yellow }}'
+ZSH_HIGHLIGHT_STYLES[double-quoted-argument]='fg={{ ts_zsh_palette.yellow }}'
+ZSH_HIGHLIGHT_STYLES[dollar-quoted-argument]='fg={{ ts_zsh_palette.yellow }}'
+ZSH_HIGHLIGHT_STYLES[command-substitution]='fg={{ ts_zsh_palette.pink }}'
+ZSH_HIGHLIGHT_STYLES[process-substitution]='fg={{ ts_zsh_palette.pink }}'
+ZSH_HIGHLIGHT_STYLES[back-quoted-argument]='fg={{ ts_zsh_palette.pink }}'
+ZSH_HIGHLIGHT_STYLES[assign]='fg={{ ts_zsh_palette.text }}'
+ZSH_HIGHLIGHT_STYLES[comment]='fg={{ ts_zsh_palette.overlay0 }},italic'
+ZSH_HIGHLIGHT_STYLES[redirection]='fg={{ ts_zsh_palette.sky }}'
+ZSH_HIGHLIGHT_STYLES[named-fd]='fg={{ ts_zsh_palette.sky }}'
+ZSH_HIGHLIGHT_STYLES[numeric-fd]='fg={{ ts_zsh_palette.sky }}'

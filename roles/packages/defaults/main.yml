@@ -1,0 +1,12 @@
+---
+# Logical packages this role installs. Each entry:
+#   name:  logical package name (required)
+#   kind:  "stack" (Homebrew/Linuxbrew) or "prereq" (native PM) (required)
+#   check: optional command to verify resolves on PATH after install
+#
+# Empty by default so a real run is a safe no-op; later slices populate it.
+ts_packages: []
+
+# Logical -> per-manager concrete-name overrides (see module_utils/ts_packages.py).
+# Lives here as data, never inline in tasks.
+ts_package_map: {}

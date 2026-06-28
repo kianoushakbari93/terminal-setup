@@ -1,0 +1,48 @@
+---
+# Shared variables for all roles. Per-OS facts (brew prefix, package-manager
+# family) are resolved by tooling/terminal_setup/platform_facts.py and surfaced
+# to later roles; the skeleton keeps this minimal and vars-ready.
+
+# Python interpreter used to run the tooling CLIs (pure stdlib, any 3.8+).
+ts_python: "{{ ansible_python_interpreter | default('python3') }}"
+
+# Repo root on the controller (this is a local-connection play).
+ts_repo_dir: "{{ playbook_dir }}"
+
+# Where config backups and the restore manifest are written.
+ts_backup_root: "~/.terminal-setup/backups"
+
+# Logical -> per-manager concrete package-name overrides. The package layer falls
+# back to the logical name when a manager has no entry here, so only differences
+# need listing. Lives here as data; never inline in role tasks.
+ts_package_map:
+  fd:
+    apt: fd-find
+    dnf: fd-find
+  bat:
+    apt: bat            # binary is `batcat` on Debian/Ubuntu
+  ripgrep:
+    apt: ripgrep
+    dnf: ripgrep
+    pacman: ripgrep
+  bash-completion:
+    brew: bash-completion@2
+
+# Logical packages installed by the `packages` role. The shell slices append
+# their stack/prereq entries here. Installed via Homebrew/Linuxbrew (stack).
+ts_packages:
+  # zsh stack
+  - { name: zsh, kind: stack, check: zsh }
+  - { name: gnu-sed, kind: stack }
+  - { name: powerlevel10k, kind: stack }
+  - { name: zsh-autosuggestions, kind: stack }
+  - { name: zsh-syntax-highlighting, kind: stack }
+  # bash stack (ble.sh is installed by the bash role; not a package)
+  - { name: bash, kind: stack, check: bash }
+  - { name: starship, kind: stack, check: starship }
+  - { name: bash-completion, kind: stack }
+  # tmux stack (tpm + plugins are installed by the tmux role)
+  - { name: tmux, kind: stack, check: tmux }
+
+# Toggle for the macOS iTerm2 role (wired in a later slice).
+skip_iterm2: false

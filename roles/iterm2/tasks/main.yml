@@ -1,0 +1,20 @@
+---
+# Configure iTerm2 font + transparency. macOS-only and skippable via --skip-iterm2
+# (which sets skip_iterm2=true). A clean no-op on non-macOS hosts.
+- name: Configure iTerm2 (font + transparency)
+  iterm2_config:
+    plist_path: "{{ ts_iterm2_plist }}"
+    font: "{{ ts_iterm2_font }}"
+    transparency: "{{ ts_iterm2_transparency }}"
+  register: ts_iterm2_result
+  when:
+    - ts_is_macos | bool
+    - not (skip_iterm2 | default(false) | bool)
+
+- name: Notify that iTerm2 must be restarted
+  ansible.builtin.debug:
+    msg: "{{ ts_iterm2_result.notice }}"
+  when:
+    - ts_iterm2_result is defined
+    - ts_iterm2_result.notice is defined
+    - ts_iterm2_result.notice | length > 0

@@ -1,0 +1,18 @@
+---
+# Health suite (final gate): run the named probes. Non-zero exit fails the play
+# so a broken terminal is never reported as success.
+- name: Run terminal health suite
+  ansible.builtin.command:
+    cmd: "{{ ts_python }} -m tooling.terminal_setup.healthcheck_cli"
+  environment:
+    PYTHONPATH: "{{ ts_repo_dir }}"
+  args:
+    chdir: "{{ ts_repo_dir }}"
+  register: ts_health
+  changed_when: false
+  failed_when: ts_health.rc != 0
+  check_mode: false
+
+- name: Show health-check summary
+  ansible.builtin.debug:
+    msg: "{{ ts_health.stdout_lines }}"

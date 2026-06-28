@@ -1,0 +1,32 @@
+---
+# Resolve per-OS path facts (brew prefix, plugin share dir, font dir) and expose
+# them play-wide for later roles (fonts, shells, configs).
+- name: Resolve per-OS path facts
+  ts_platform_facts:
+
+# Resolve the distro once (lower-cased) so the package layer can pick the native
+# manager on Linux. Empty on macOS, where it is not needed.
+- name: Determine distro id
+  ansible.builtin.set_fact:
+    ts_distro: "{{ ansible_distribution | default('') | lower }}"
+
+# Install each logical package via the correct manager, idempotently.
+- name: Install packages
+  package_install:
+    name: "{{ item.name }}"
+    kind: "{{ item.kind }}"
+    package_map: "{{ ts_package_map }}"
+    distro: "{{ ts_distro | default(omit) }}"
+  loop: "{{ ts_packages }}"
+  loop_control:
+    label: "{{ item.name }} ({{ item.kind }})"
+
+# Health probe: every package that declares a `check` command must resolve on PATH.
+- name: Verify packages resolve on PATH
+  ansible.builtin.command: "command -v {{ item.check }}"
+  args:
+    executable: /bin/bash
+  changed_when: false
+  loop: "{{ ts_packages | selectattr('check', 'defined') | list }}"
+  loop_control:
+    label: "{{ item.check }}"

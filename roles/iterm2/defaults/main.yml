@@ -1,0 +1,8 @@
+---
+# iTerm2 preferences plist and the values to apply (overridable for testing).
+ts_iterm2_plist: "{{ ansible_user_dir }}/Library/Preferences/com.googlecode.iterm2.plist"
+ts_iterm2_font: "MesloLGSNF-Regular 16"
+ts_iterm2_transparency: 0.2
+
+# macOS gate (overridable in tests to simulate a non-macOS host).
+ts_is_macos: "{{ ansible_system == 'Darwin' }}"

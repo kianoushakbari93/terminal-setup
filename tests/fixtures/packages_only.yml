@@ -1,0 +1,8 @@
+---
+# Test fixture: apply ONLY the packages role, driven by ts_packages passed via
+# --extra-vars. gather_facts so the role can resolve the distro on Linux.
+- name: Apply packages role in isolation
+  hosts: localhost
+  gather_facts: true
+  roles:
+    - role: packages

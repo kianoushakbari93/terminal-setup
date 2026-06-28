@@ -1,0 +1,18 @@
+---
+# Locate a zsh to use as the login shell.
+- name: Locate zsh
+  ansible.builtin.command: which zsh
+  register: ts_zsh_path
+  changed_when: false
+
+# Set zsh as the default shell (skips when already zsh).
+- name: Set zsh as the default login shell
+  set_default_shell:
+    target_shell: "{{ ts_login_shell | default(ts_zsh_path.stdout) }}"
+  register: ts_chsh
+
+# Tell the user to re-login when the shell actually changed.
+- name: Notify that a fresh login is needed
+  ansible.builtin.debug:
+    msg: "{{ ts_chsh.notice }}"
+  when: ts_chsh.notice is defined and ts_chsh.notice

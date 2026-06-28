@@ -1,0 +1,30 @@
+---
+# Ensure the per-OS path facts (ts_brew_prefix etc.) exist even when this role
+# runs in isolation (in site.yml the packages role sets them first).
+- name: Ensure per-OS path facts
+  ts_platform_facts:
+  when: ts_brew_prefix is not defined
+
+# Render the Catppuccin Mocha p10k config and deploy it through the merge engine
+# (glyphs injected via the `glyph` filter survive into the rendered file).
+- name: Deploy ~/.p10k.zsh
+  config_merge:
+    target_path: "{{ ts_zsh_p10k }}"
+    managed_content: "{{ lookup('template', 'p10k.zsh.j2') }}"
+    backup_root: "{{ ts_backup_root }}"
+
+# Render and deploy ~/.zshrc through the merge engine (foreign content preserved
+# in ~/.zshrc.local, tool-owned prompt/plugin lines scrubbed).
+- name: Deploy ~/.zshrc
+  config_merge:
+    target_path: "{{ ts_zsh_rc }}"
+    managed_content: "{{ lookup('template', 'zshrc.j2') }}"
+    backup_root: "{{ ts_backup_root }}"
+
+# Deep zsh health probe: a real interactive zsh must load cleanly with p10k,
+# plugins and glyphs, under the startup-time threshold.
+- name: Verify zsh is healthy
+  zsh_health:
+    zdotdir: "{{ ts_zsh_zdotdir }}"
+  when: ts_zsh_health_check | bool
+  tags: [zsh_verify]

@@ -1,0 +1,29 @@
+---
+# Deploy target (overridable for testing).
+ts_tmux_conf: "{{ ansible_user_dir }}/.tmux.conf"
+ts_tmux_home: "{{ ansible_user_dir }}"
+ts_tmux_plugins_dir: "{{ ansible_user_dir }}/.tmux/plugins"
+ts_tmux_bin: "{{ ts_brew_prefix }}/bin/tmux"
+
+# Catppuccin flavor and palette - the single source of truth for the status bar.
+ts_tmux_flavor: mocha
+ts_tmux_palette:
+  mauve: "#cba6f7"
+  text: "#cdd6f4"
+  crust: "#11111b"
+  overlay2: "#9399b2"
+  surface0: "#313244"
+  surface1: "#45475a"
+  fg: "#cdd6f4"
+
+# tmux plugins managed by tpm.
+ts_tmux_plugin_repos:
+  - tmux-plugins/tmux-sensible
+  - tmux-plugins/tmux-yank
+  - catppuccin/tmux
+  - tmux-plugins/tmux-battery
+
+# Install plugins via tpm during the run (disable in unit-style runs).
+ts_tmux_install_plugins: true
+# Run the deep tmux health probe after deploy.
+ts_tmux_health_check: true

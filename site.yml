@@ -1,0 +1,25 @@
+---
+# =============================================================================
+#  site.yml - top-level playbook for the Terminal Setup tool.
+#
+#  Order is deliberate and fail-fast:
+#    1. preflight   - validate the environment; halt before any change on failure
+#    2. healthcheck - prove the result is healthy (final gate)
+#
+#  Later slices insert packages / fonts / shells / configs / chsh / iterm2
+#  roles between the two gates.
+# =============================================================================
+- name: Provision a professional terminal (zsh + bash + tmux)
+  hosts: localhost
+  gather_facts: true
+  roles:
+    - role: preflight
+    - role: packages
+    - role: fonts
+    - role: zsh
+    - role: bash
+    - role: tmux
+    - role: chsh
+    - role: iterm2
+    - role: configs
+    - role: healthcheck

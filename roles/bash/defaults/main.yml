@@ -1,0 +1,28 @@
+---
+# Deploy targets (overridable for testing).
+ts_bash_rc: "{{ ansible_user_dir }}/.bashrc"
+ts_bash_profile: "{{ ansible_user_dir }}/.bash_profile"
+ts_starship_toml: "{{ ansible_user_dir }}/.config/starship.toml"
+ts_bash_home: "{{ ansible_user_dir }}"
+ts_blesh_dir: "{{ ansible_user_dir }}/.local/share/blesh"
+
+# bash 4+ is required for ble.sh; on macOS that is the Homebrew bash.
+ts_bash_bin: "{{ ts_brew_prefix }}/bin/bash"
+
+# Dracula palette - the single source of truth for the bash starship + ble.sh
+# colours, deliberately distinct from zsh's Catppuccin.
+ts_bash_palette:
+  base: "#282a36"
+  surface: "#44475a"
+  fg: "#f8f8f2"
+  comment: "#6272a4"
+  cyan: "#8be9fd"
+  green: "#50fa7b"
+  orange: "#ffb86c"
+  pink: "#ff79c6"
+  purple: "#bd93f9"
+  red: "#ff5555"
+  yellow: "#f1fa8c"
+
+# Run the deep bash health probe after deploy (disable in unit-style runs).
+ts_bash_health_check: true

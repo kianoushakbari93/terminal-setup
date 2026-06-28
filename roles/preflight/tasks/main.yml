@@ -1,0 +1,18 @@
+---
+# Pre-flight gate: run the environment validation CLI. It reports EVERY problem
+# at once and exits non-zero, which fails the play before any change-making role.
+- name: Run pre-flight environment checks
+  ansible.builtin.command:
+    cmd: "{{ ts_python }} -m tooling.terminal_setup.preflight_cli"
+  environment:
+    PYTHONPATH: "{{ ts_repo_dir }}"
+  args:
+    chdir: "{{ ts_repo_dir }}"
+  register: ts_preflight
+  changed_when: false
+  failed_when: ts_preflight.rc != 0
+  check_mode: false
+
+- name: Show pre-flight report
+  ansible.builtin.debug:
+    msg: "{{ ts_preflight.stdout_lines }}"
