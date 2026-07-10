@@ -36,8 +36,10 @@ def apply(plist, **over):
 
 
 def test_applies_and_prints_restart_notice_on_macos(tmp_path):
+    # Force the macOS gate open: the module edits the plist with plistlib, so
+    # the apply path is exercised for real on any host OS running the suite.
     plist = make_plist(tmp_path)
-    proc = apply(plist)
+    proc = apply(plist, ts_is_macos=True)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "changed=1" in proc.stdout
     assert "Restart iTerm2" in proc.stdout  # notice printed
@@ -47,14 +49,14 @@ def test_applies_and_prints_restart_notice_on_macos(tmp_path):
 
 def test_rerun_is_idempotent(tmp_path):
     plist = make_plist(tmp_path)
-    apply(plist)
-    second = apply(plist)
+    apply(plist, ts_is_macos=True)
+    second = apply(plist, ts_is_macos=True)
     assert "changed=0" in second.stdout
 
 
 def test_skip_iterm2_skips_the_role(tmp_path):
     plist = make_plist(tmp_path)
-    proc = apply(plist, skip_iterm2=True)
+    proc = apply(plist, ts_is_macos=True, skip_iterm2=True)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "changed=0" in proc.stdout
     # Plist untouched.

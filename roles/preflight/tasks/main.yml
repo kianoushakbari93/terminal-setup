@@ -3,7 +3,9 @@
 # at once and exits non-zero, which fails the play before any change-making role.
 - name: Run pre-flight environment checks
   ansible.builtin.command:
-    cmd: "{{ ts_python }} -m tooling.terminal_setup.preflight_cli"
+    cmd: >-
+      {{ ts_python }} -m tooling.terminal_setup.preflight_cli
+      --prereq-count {{ ts_packages | default([]) | selectattr('kind', 'equalto', 'prereq') | list | length }}
   environment:
     PYTHONPATH: "{{ ts_repo_dir }}"
   args:

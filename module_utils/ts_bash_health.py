@@ -73,7 +73,8 @@ def run_bash_health(
     warmup: bool = True,
 ) -> List[ProbeOutcome]:
     """Launch an interactive bash (under a PTY) with HOME=``home`` and probe it.
-    tmux auto-start is suppressed by posing as VS Code's integrated terminal.
+    tmux auto-start is suppressed by posing as VS Code's integrated terminal
+    and as an already-nested tmux client.
 
     A warm-up run is performed first so the measured startup reflects steady
     state, not one-time cold init."""
@@ -81,7 +82,10 @@ def run_bash_health(
     env["HOME"] = home
     env["TERM_PROGRAM"] = "vscode"
     env["TERM"] = env.get("TERM", "xterm-256color")
-    env.pop("TMUX", None)
+    # Pose as an already-nested tmux client: user rc files commonly guard tmux
+    # auto-start with `[ -z "$TMUX" ]`, and a launched (or exec'd) tmux would
+    # swallow the probe until its timeout.
+    env["TMUX"] = "terminal-setup-health-probe,0,0"
     # Point starship at the rendered config in this HOME.
     env["STARSHIP_CONFIG"] = os.path.join(home, ".config", "starship.toml")
 

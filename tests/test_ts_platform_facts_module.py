@@ -7,6 +7,8 @@ from pathlib import Path
 
 import pytest
 
+from tooling.terminal_setup import platform_facts
+
 REPO = Path(__file__).resolve().parent.parent
 
 pytestmark = pytest.mark.skipif(
@@ -22,7 +24,13 @@ def test_module_sets_per_os_path_facts():
     assert proc.returncode == 0, proc.stdout + proc.stderr
     payload = json.loads(proc.stdout.split("=>", 1)[1])
     facts = payload["ansible_facts"]
-    assert facts["ts_os_family"] == "macos"
-    assert facts["ts_brew_prefix"] == "/opt/homebrew"
-    assert facts["ts_share_dir"] == "/opt/homebrew/share"
-    assert facts["ts_font_dir"].endswith("Library/Fonts")
+    # The module must agree with the pure resolver for whatever host runs the
+    # suite (macOS or Linux), so derive the expectations from it.
+    expected = platform_facts.resolve()
+    assert facts["ts_os_family"] == expected.os_family
+    assert facts["ts_brew_prefix"] == expected.brew_prefix
+    assert facts["ts_share_dir"] == expected.brew_prefix + "/share"
+    if expected.os_family == "macos":
+        assert facts["ts_font_dir"].endswith("Library/Fonts")
+    else:
+        assert facts["ts_font_dir"].endswith(".local/share/fonts")

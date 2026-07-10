@@ -8,9 +8,11 @@ from pathlib import Path
 
 import pytest
 
+from tooling.terminal_setup import platform_facts
+
 REPO = Path(__file__).resolve().parent.parent
 FIXTURE = "tests/fixtures/tmux_only.yml"
-TMUX_BIN = "/opt/homebrew/bin/tmux"
+TMUX_BIN = f"{platform_facts.resolve().brew_prefix}/bin/tmux"
 PLUGINS = Path.home() / ".tmux/plugins"
 
 pytestmark = pytest.mark.skipif(

@@ -46,3 +46,9 @@ ts_packages:
 
 # Toggle for the macOS iTerm2 role (wired in a later slice).
 skip_iterm2: false
+
+# Uninstall competing prompt frameworks (oh-my-zsh, oh-my-posh) when present.
+# User content (oh-my-zsh custom/) is backed up into the snapshot first, and
+# framework references are scrubbed from the rc .local files. Set to false to
+# leave existing frameworks installed.
+ts_uninstall_frameworks: true

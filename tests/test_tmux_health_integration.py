@@ -9,10 +9,11 @@ from jinja2 import Environment, FileSystemLoader
 import glyphs
 import ts_tmux_health as th
 from test_tmux_template import MOCHA
+from tooling.terminal_setup import platform_facts
 
 REPO = Path(__file__).resolve().parent.parent
 TPL_DIR = REPO / "roles/tmux/templates"
-TMUX_BIN = "/opt/homebrew/bin/tmux"
+TMUX_BIN = f"{platform_facts.resolve().brew_prefix}/bin/tmux"
 PLUGINS = Path.home() / ".tmux/plugins"
 
 pytestmark = pytest.mark.skipif(

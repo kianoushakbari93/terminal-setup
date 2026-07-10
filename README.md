@@ -44,6 +44,10 @@ battery / date-time / session bottom-right, transparent middle:
   battery / date-time / session, transparent bar; CPU/load fallback on
   batteryless hosts.
 - **Fonts:** MesloLGS, JetBrainsMono and FiraCode Nerd Fonts.
+- **Framework cleanup:** competing prompt frameworks (oh-my-zsh, oh-my-posh)
+  are uninstalled so they never fight the rendered prompts - user content
+  (oh-my-zsh `custom/`) is backed up first and every reference is scrubbed from
+  the `.local` files. Opt out with `ts_uninstall_frameworks: false`.
 - **iTerm2 (macOS):** profile font + window transparency.
 - **Safe & reversible:** every replaced file is backed up; your custom content is
   preserved; a single `--restore` reverts everything.
@@ -101,14 +105,17 @@ bootstrap.sh
        1. preflight    validate OS, network, sudo, disk, writable targets
                        (reports ALL problems up front, then fail-fast)
        2. packages     install zsh/bash/tmux/starship/plugins per-OS
-       3. fonts        install MesloLGS + JetBrainsMono + FiraCode Nerd Fonts
-       4. zsh          render ~/.zshrc + ~/.p10k.zsh, deep zsh health probe
-       5. bash         render ~/.bashrc + ~/.bash_profile + starship.toml,
+       3. frameworks   uninstall competing prompt frameworks (oh-my-zsh,
+                       oh-my-posh) with backups; disable via
+                       ts_uninstall_frameworks=false
+       4. fonts        install MesloLGS + JetBrainsMono + FiraCode Nerd Fonts
+       5. zsh          render ~/.zshrc + ~/.p10k.zsh, deep zsh health probe
+       6. bash         render ~/.bashrc + ~/.bash_profile + starship.toml,
                        install ble.sh, deep bash health probe
-       6. tmux         install tpm + plugins, render ~/.tmux.conf, deep tmux probe
-       7. chsh         set zsh as the default login shell (skips if already zsh)
-       8. iterm2       set font + transparency (macOS only)
-       9. healthcheck  final health summary
+       7. tmux         install tpm + plugins, render ~/.tmux.conf, deep tmux probe
+       8. chsh         set zsh as the default login shell (skips if already zsh)
+       9. iterm2       set font + transparency (macOS only)
+      10. healthcheck  final health summary
 ```
 
 Every config is rendered from a Jinja2 template and deployed through the merge

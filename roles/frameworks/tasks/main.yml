@@ -1,0 +1,20 @@
+---
+# Remove prompt frameworks the tool replaces, so they never fight the rendered
+# prompts. Backed up first; references scrubbed from the rc .local files so no
+# shell sources a removed path. Disable with ts_uninstall_frameworks=false.
+- name: Uninstall competing prompt frameworks (oh-my-zsh, oh-my-posh)
+  framework_uninstall:
+    home: "{{ ts_frameworks_home }}"
+    backup_root: "{{ ts_backup_root }}"
+    locals_to_scrub: "{{ ts_frameworks_locals | default(omit) }}"
+  when: ts_uninstall_frameworks | bool
+  register: ts_frameworks_result
+
+- name: Report removed frameworks
+  ansible.builtin.debug:
+    msg: >-
+      Removed {{ ts_frameworks_result.removed | join(', ') }}
+      (backups: {{ ts_frameworks_result.backed_up | join(', ') | default('none', true) }})
+  when:
+    - ts_frameworks_result is not skipped
+    - ts_frameworks_result.removed | length > 0

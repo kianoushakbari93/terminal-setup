@@ -9,9 +9,12 @@ from pathlib import Path
 
 import pytest
 
+from tooling.terminal_setup import platform_facts
+
 REPO = Path(__file__).resolve().parent.parent
 FIXTURE = "tests/fixtures/bash_only.yml"
-BREW_BASH = "/opt/homebrew/bin/bash"
+BREW_PREFIX = platform_facts.resolve().brew_prefix  # host-appropriate (macOS/Linux)
+BREW_BASH = f"{BREW_PREFIX}/bin/bash"
 REAL_BLESH = Path.home() / ".local/share/blesh"
 
 pytestmark = pytest.mark.skipif(
@@ -37,6 +40,9 @@ def apply(tmp, health=True):
         "ts_bash_bin": BREW_BASH,
         "ts_backup_root": str(tmp / "backups"),
         "ts_bash_health_check": health,
+        # Cold temp HOME: ble.sh finishes its cache compile across the first
+        # launches, so allow the same slack as the direct integration test.
+        "ts_bash_health_threshold_s": 5.0,
     }
     return subprocess.run(
         ["ansible-playbook", "-i", "inventory/localhost.yml", FIXTURE,

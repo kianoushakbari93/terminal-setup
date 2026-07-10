@@ -12,7 +12,7 @@ import os
 import re
 import shutil
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional, Sequence
 
 MANIFEST_NAME = "manifest.jsonl"
@@ -27,6 +27,12 @@ DEFAULT_SIGNATURES: Sequence[str] = (
     "powerlevel10k",
     ".p10k.zsh",
     "starship init",
+    # Competing prompt frameworks: the tool owns the prompt, and the frameworks
+    # role uninstalls these, so their config must not migrate into .local
+    # (sourcing a removed path would error on every launch).
+    "oh-my-posh",
+    "oh-my-zsh",
+    "zsh_theme",
     "ble.sh",
     "blesh/ble",
     "zsh-autosuggestions",
@@ -36,6 +42,18 @@ DEFAULT_SIGNATURES: Sequence[str] = (
     "@plugin \"",
     "catppuccin/tmux",
     "tmux-battery",
+    # tmux status-bar theming: the tool owns the bar end-to-end (window tabs,
+    # right-side modules, styles). Leftover theme lines in .local would source
+    # after the managed block and silently override the rendered bar.
+    "status-left",
+    "status-right",
+    "status-style",
+    "status-position",
+    "status-justify",
+    "status-interval",
+    "status-bg",
+    "status-fg",
+    "window-status",
 )
 
 
@@ -124,13 +142,41 @@ def verify(
     return VerifyResult(ok=not problems, problems=problems)
 
 
+_IF_OPEN = re.compile(r"^\s*if\b")
+_FI_CLOSE = re.compile(r"^\s*fi\b")
+_FI_INLINE = re.compile(r"[;\s]fi\s*(#.*)?$")
+
+
 def _scrub_signatures(text: str, signatures: Sequence[str]) -> str:
     lowered = [s.lower() for s in signatures]
-    kept = [
-        line
-        for line in text.splitlines()
-        if not any(sig in line.lower() for sig in lowered)
-    ]
+
+    def is_signature(line: str) -> bool:
+        return any(sig in line.lower() for sig in lowered)
+
+    lines = text.splitlines()
+    kept: List[str] = []
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        if not is_signature(line):
+            kept.append(line)
+            i += 1
+            continue
+        # A tool-owned line that opens a multi-line `if` guard (the common
+        # `if [ -f plugin ]; then source plugin; fi` pattern) takes the whole
+        # block with it up to the matching `fi`; dropping only the matching
+        # lines would strand the `fi` and break the shell.
+        if _IF_OPEN.match(line) and not _FI_INLINE.search(line):
+            depth = 1
+            i += 1
+            while i < len(lines) and depth:
+                if _IF_OPEN.match(lines[i]) and not _FI_INLINE.search(lines[i]):
+                    depth += 1
+                elif _FI_CLOSE.match(lines[i]):
+                    depth -= 1
+                i += 1
+            continue
+        i += 1
     return "\n".join(kept)
 
 
@@ -158,7 +204,9 @@ def merge_config(
     now: Optional[datetime] = None,
     check_mode: bool = False,
 ) -> MergeResult:
-    now = now or datetime.utcnow()
+    # Naive UTC keeps the manifest/snapshot stamp format stable (a trailing
+    # `Z` is appended manually) without the deprecated ``utcnow``.
+    now = now or datetime.now(timezone.utc).replace(tzinfo=None)
     target_path = os.path.expanduser(target_path)
     local_path = target_path + local_suffix
     # Default to the POSIX-shell guarded source; callers (tmux/TOML) override.

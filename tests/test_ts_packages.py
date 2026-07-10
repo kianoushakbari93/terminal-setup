@@ -41,6 +41,15 @@ def test_stack_package_resolves_to_brew_on_any_os():
     assert r_lin.manager == "brew" and r_lin.name == "tmux"
 
 
+def test_stack_package_needs_no_distro_even_on_unknown_linux():
+    # The stack installs via Linuxbrew regardless of distro, so an unknown (or
+    # unspecified) distro must not block a stack resolution on Linux.
+    r_none = pkg.resolve("tmux", kind="stack", os_family="linux", package_map=PKG_MAP)
+    r_gentoo = pkg.resolve("tmux", kind="stack", os_family="linux", distro="gentoo", package_map=PKG_MAP)
+    assert r_none.manager == "brew" and r_none.name == "tmux"
+    assert r_gentoo.manager == "brew" and r_gentoo.name == "tmux"
+
+
 def test_prereq_package_resolves_to_native_manager():
     r = pkg.resolve("git", kind="prereq", os_family="linux", distro="fedora", package_map=PKG_MAP)
     assert r.manager == "dnf"

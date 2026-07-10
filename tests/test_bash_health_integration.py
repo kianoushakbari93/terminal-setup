@@ -11,10 +11,12 @@ from jinja2 import Environment, FileSystemLoader
 import glyphs
 import ts_bash_health as bh
 from test_bash_templates import DRACULA
+from tooling.terminal_setup import platform_facts
 
 REPO = Path(__file__).resolve().parent.parent
 TPL_DIR = REPO / "roles/bash/templates"
-BREW_BASH = "/opt/homebrew/bin/bash"
+BREW_PREFIX = platform_facts.resolve().brew_prefix  # host-appropriate (macOS/Linux)
+BREW_BASH = f"{BREW_PREFIX}/bin/bash"
 REAL_BLESH = Path.home() / ".local/share/blesh"
 
 pytestmark = pytest.mark.skipif(
@@ -27,7 +29,7 @@ pytestmark = pytest.mark.skipif(
 def _render_home(home: Path):
     env = Environment(loader=FileSystemLoader(str(TPL_DIR)), keep_trailing_newline=True)
     env.filters["glyph"] = glyphs.glyph
-    ctx = dict(ts_bash_palette=DRACULA, ts_brew_prefix="/opt/homebrew")
+    ctx = dict(ts_bash_palette=DRACULA, ts_brew_prefix=BREW_PREFIX)
     bashrc = env.get_template("bashrc.j2").render(**ctx)
     # Simulate config_merge appending the .local source line.
     bashrc += '\n[[ -f ~/.bashrc.local ]] && source ~/.bashrc.local\n'

@@ -95,6 +95,152 @@ def test_known_tool_signatures_are_scrubbed_not_moved_to_local(tmp_path):
     assert "ble.sh" not in local
 
 
+def test_scrubbing_an_if_guard_takes_the_whole_block_not_just_matching_lines(tmp_path):
+    # The common plugin-guard pattern: only the `if` and `source` lines mention
+    # the plugin. Dropping just those would strand `fi` and break the shell.
+    target = tmp_path / ".zshrc"
+    target.write_text(
+        "\n".join(
+            [
+                "export KEEP_ME=1",
+                "# Autosuggestions",
+                "if [[ -f ~/.zsh/zsh-autosuggestions/zsh-autosuggestions.zsh ]]; then",
+                "    source ~/.zsh/zsh-autosuggestions/zsh-autosuggestions.zsh",
+                "fi",
+                "if command -v tmux >/dev/null 2>&1; then",
+                '    if [ -z "$TMUX" ]; then',
+                "        tmux attach -t default || tmux new -s default",
+                "    fi",
+                "fi",
+            ]
+        )
+        + "\n"
+    )
+
+    ts_merge.merge_config(
+        target_path=str(target),
+        managed_content="export EDITOR=vim",
+        backup_root=str(tmp_path / "backups"),
+        signature_patterns=ts_merge.DEFAULT_SIGNATURES,
+    )
+
+    local = read(str(target) + ".local")
+    assert "export KEEP_ME=1" in local
+    assert "zsh-autosuggestions" not in local
+    # No stranded `fi` from the scrubbed guard block...
+    assert local.count("fi") == local.count("if")
+    # ...and untouched nested user blocks survive whole.
+    assert "tmux attach -t default" in local
+    # The scrubbed .local must still parse as shell.
+    import subprocess
+
+    proc = subprocess.run(
+        ["bash", "-n", str(target) + ".local"], capture_output=True, text=True
+    )
+    assert proc.returncode == 0, proc.stderr
+
+
+def test_scrubbing_a_single_line_if_guard_drops_only_that_line(tmp_path):
+    target = tmp_path / ".zshrc"
+    target.write_text(
+        "\n".join(
+            [
+                "export KEEP_ME=1",
+                "if [ -f ~/p10k/powerlevel10k.zsh-theme ]; then source ~/p10k/powerlevel10k.zsh-theme; fi",
+                "alias ll='ls -lh'",
+            ]
+        )
+        + "\n"
+    )
+
+    ts_merge.merge_config(
+        target_path=str(target),
+        managed_content="export EDITOR=vim",
+        backup_root=str(tmp_path / "backups"),
+        signature_patterns=ts_merge.DEFAULT_SIGNATURES,
+    )
+
+    local = read(str(target) + ".local")
+    assert "powerlevel10k" not in local
+    assert "export KEEP_ME=1" in local
+    assert "alias ll='ls -lh'" in local
+
+
+def test_competing_framework_config_is_scrubbed_on_migration(tmp_path):
+    # The frameworks role uninstalls oh-my-zsh / oh-my-posh, so migration must
+    # not carry their config into .local (sourcing a removed path errors on
+    # every shell launch).
+    target = tmp_path / ".zshrc"
+    target.write_text(
+        "\n".join(
+            [
+                "export KEEP_ME=1",
+                'export ZSH="$HOME/.oh-my-zsh"',
+                'ZSH_THEME="robbyrussell"',
+                "source $ZSH/oh-my-zsh.sh",
+                "if command -v oh-my-posh >/dev/null 2>&1; then",
+                '    eval "$(oh-my-posh init zsh --config atomic)"',
+                "fi",
+            ]
+        )
+        + "\n"
+    )
+
+    ts_merge.merge_config(
+        target_path=str(target),
+        managed_content="export EDITOR=vim",
+        backup_root=str(tmp_path / "backups"),
+        signature_patterns=ts_merge.DEFAULT_SIGNATURES,
+    )
+
+    local = read(str(target) + ".local")
+    assert "export KEEP_ME=1" in local
+    assert "oh-my-zsh" not in local
+    assert "ZSH_THEME" not in local
+    assert "oh-my-posh" not in local
+    assert local.count("fi") == local.count("if")
+
+
+def test_tmux_status_bar_theming_is_scrubbed_but_user_bindings_survive(tmp_path):
+    # The tool owns the tmux status bar end-to-end; old theme lines left in
+    # .local would source after the managed block and override the bar.
+    target = tmp_path / ".tmux.conf"
+    target.write_text(
+        "\n".join(
+            [
+                "set -g mouse on",
+                "bind | split-window -h",
+                "set -g status-right '%d/%m %H:%M:%S'",
+                "set -g status-left '#[bg=colour39] me'",
+                "setw -g window-status-current-format ' #I:#W#F '",
+                "setw -g window-status-style 'fg=colour9 bg=colour18'",
+                "set -g status-position top",
+                "set -g status-justify centre",
+            ]
+        )
+        + "\n"
+    )
+
+    ts_merge.merge_config(
+        target_path=str(target),
+        managed_content="set -g history-limit 50000",
+        source_line="source-file -q ~/.tmux.conf.local",
+        backup_root=str(tmp_path / "backups"),
+        signature_patterns=ts_merge.DEFAULT_SIGNATURES,
+    )
+
+    local = read(str(target) + ".local")
+    # User behaviour tweaks survive...
+    assert "set -g mouse on" in local
+    assert "bind | split-window -h" in local
+    # ...but every status-bar theming line is scrubbed.
+    assert "status-right" not in local
+    assert "status-left" not in local
+    assert "window-status" not in local
+    assert "status-position" not in local
+    assert "status-justify" not in local
+
+
 def test_rerun_with_unchanged_inputs_is_idempotent(tmp_path):
     target = tmp_path / ".zshrc"
     target.write_text("export MY_SECRET=42\n")

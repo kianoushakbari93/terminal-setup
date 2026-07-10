@@ -15,6 +15,7 @@
   roles:
     - role: preflight
     - role: packages
+    - role: frameworks
     - role: fonts
     - role: zsh
     - role: bash

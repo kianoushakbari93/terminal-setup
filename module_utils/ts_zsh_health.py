@@ -69,7 +69,8 @@ def run_zsh_health(
     warmup: bool = True,
 ) -> List[ProbeOutcome]:
     """Launch an interactive zsh (under a PTY) against ``zdotdir`` and probe it.
-    tmux auto-start is suppressed by posing as VS Code's integrated terminal.
+    tmux auto-start is suppressed by posing as VS Code's integrated terminal
+    and as an already-nested tmux client.
 
     A warm-up run is performed first so the measured startup reflects steady
     state, not one-time cold init (compinit cache build, gitstatusd download)."""
@@ -77,7 +78,10 @@ def run_zsh_health(
     env["ZDOTDIR"] = zdotdir
     env["TERM_PROGRAM"] = "vscode"   # skips the .zshrc tmux auto-start branch
     env["TERM"] = env.get("TERM", "xterm-256color")
-    env.pop("TMUX", None)
+    # Pose as an already-nested tmux client: user rc files commonly guard tmux
+    # auto-start with `[ -z "$TMUX" ]`, and a launched tmux would swallow the
+    # probe until its timeout.
+    env["TMUX"] = "terminal-setup-health-probe,0,0"
 
     if warmup:
         ts_pty.run_in_pty([zsh_bin, "-i", "-c", PROBE_SNIPPET], env)

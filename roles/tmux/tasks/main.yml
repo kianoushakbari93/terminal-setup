@@ -22,20 +22,13 @@
     ts_tmux_has_battery: "{{ ts_batt.stdout | default('yes') == 'yes' }}"
   when: ts_tmux_has_battery is not defined
 
-# Ensure tpm is installed, then install declared plugins non-interactively.
+# Ensure tpm is installed before the conf that runs it is deployed.
 - name: Install tpm
   ansible.builtin.git:
     repo: https://github.com/tmux-plugins/tpm
     dest: "{{ ts_tmux_plugins_dir }}/tpm"
     depth: 1
     version: master
-  when: ts_tmux_install_plugins | bool
-  tags: [tmux_install]
-
-- name: Install tmux plugins via tpm
-  ansible.builtin.command: "{{ ts_tmux_plugins_dir }}/tpm/bin/install_plugins"
-  register: ts_tpm
-  changed_when: "'Already installed' not in ts_tpm.stdout"
   when: ts_tmux_install_plugins | bool
   tags: [tmux_install]
 
@@ -47,6 +40,16 @@
     managed_content: "{{ lookup('template', 'tmux.conf.j2') }}"
     source_line: "source-file -q ~/.tmux.conf.local"
     backup_root: "{{ ts_backup_root }}"
+
+# Install declared plugins non-interactively. This must run AFTER the conf is
+# deployed: tpm reads the @plugin declarations from ~/.tmux.conf, and on first
+# migration the pre-existing conf would list the wrong plugins (or none).
+- name: Install tmux plugins via tpm
+  ansible.builtin.command: "{{ ts_tmux_plugins_dir }}/tpm/bin/install_plugins"
+  register: ts_tpm
+  changed_when: "'Already installed' not in ts_tpm.stdout"
+  when: ts_tmux_install_plugins | bool
+  tags: [tmux_install]
 
 # Deep tmux health probe (isolated socket; non-destructive).
 - name: Verify tmux is healthy

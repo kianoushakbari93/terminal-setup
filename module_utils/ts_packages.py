@@ -92,11 +92,16 @@ def resolve(
     ``kind`` is "stack" (installed via Homebrew/Linuxbrew) or "prereq"
     (installed via the platform's native manager).
     """
-    managers = select_managers(os_family, distro)
     if kind == "stack":
-        manager = managers.stack
+        # The stack always installs via Homebrew/Linuxbrew; the distro (and its
+        # native manager) is irrelevant, so an unknown distro must not block it.
+        if os_family not in ("macos", "linux"):
+            raise UnsupportedPlatform(
+                f"Unsupported OS family: {os_family!r}. Supported: macos, linux."
+            )
+        manager = "brew"
     elif kind == "prereq":
-        manager = managers.native
+        manager = select_managers(os_family, distro).native
     else:
         raise ValueError(f"Unknown package kind: {kind!r} (expected 'stack' or 'prereq')")
 

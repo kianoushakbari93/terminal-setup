@@ -8,9 +8,12 @@ from pathlib import Path
 
 import pytest
 
+from tooling.terminal_setup import platform_facts
+
 REPO = Path(__file__).resolve().parent.parent
 FIXTURE = "tests/fixtures/zsh_only.yml"
-PLUGINS_PRESENT = Path("/opt/homebrew/share/powerlevel10k/powerlevel10k.zsh-theme").exists()
+BREW_PREFIX = platform_facts.resolve().brew_prefix  # host-appropriate (macOS/Linux)
+PLUGINS_PRESENT = Path(f"{BREW_PREFIX}/share/powerlevel10k/powerlevel10k.zsh-theme").exists()
 
 pytestmark = pytest.mark.skipif(
     shutil.which("ansible-playbook") is None or not PLUGINS_PRESENT,

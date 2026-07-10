@@ -1,0 +1,10 @@
+---
+# Uninstall competing prompt frameworks (oh-my-zsh, oh-my-posh). The tool owns
+# the prompt (Powerlevel10k for zsh, starship for bash); a leftover framework
+# keeps re-asserting itself on every shell launch. User content (oh-my-zsh
+# custom/) is backed up into the snapshot before removal. Set to false to keep
+# existing frameworks installed.
+ts_uninstall_frameworks: true
+
+# Overridable for tests: the HOME to detect/remove under.
+ts_frameworks_home: "{{ ansible_user_dir }}"

@@ -26,3 +26,8 @@ ts_bash_palette:
 
 # Run the deep bash health probe after deploy (disable in unit-style runs).
 ts_bash_health_check: true
+
+# Startup-time budget for the probe. A freshly-created HOME needs more slack:
+# ble.sh finishes its one-time cache compile in the background across the
+# first few launches (tests deploying into a temp HOME raise this).
+ts_bash_health_threshold_s: 2.0

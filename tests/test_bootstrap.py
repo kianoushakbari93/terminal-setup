@@ -2,6 +2,7 @@
 handling, --check passthrough, and idempotent prerequisite detection in a dry
 run that never installs anything or runs Ansible for real."""
 import os
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -82,14 +83,24 @@ def test_restore_lists_and_reverts_via_bootstrap(tmp_path):
     assert target.read_text() == "original\n"
 
 
-def test_dry_run_reports_install_plan_for_missing_prerequisite():
-    # Run with a PATH that lacks ansible-playbook (it lives in the venv) so the
-    # tool sees it as missing and reports it would install it - without doing so.
+def test_dry_run_reports_install_plan_for_missing_prerequisite(tmp_path):
+    # Build a bin dir holding every prerequisite except ansible-playbook, so
+    # exactly that one reads as missing regardless of the host's real layout
+    # (system dirs may or may not carry ansible-playbook).
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    for tool in ("bash", "dirname"):  # real binaries the script needs to run
+        (bin_dir / tool).symlink_to(shutil.which(tool))
+    for tool in ("brew", "git", "curl", "python3"):  # presence-only stubs
+        stub = bin_dir / tool
+        stub.write_text("#!/bin/sh\nexit 0\n")
+        stub.chmod(0o755)
+
     env = dict(os.environ)
     env["TS_BOOTSTRAP_DRY_RUN"] = "1"
-    env["PATH"] = "/usr/bin:/bin:/usr/sbin:/sbin:/opt/homebrew/bin"
+    env["PATH"] = str(bin_dir)
     proc = subprocess.run(
-        ["bash", str(BOOTSTRAP)],
+        [str(bin_dir / "bash"), str(BOOTSTRAP)],
         capture_output=True, text=True, env=env, cwd=str(REPO),
     )
     assert proc.returncode == 0

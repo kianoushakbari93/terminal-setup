@@ -49,5 +49,6 @@
   bash_health:
     home: "{{ ts_bash_home }}"
     bash_bin: "{{ ts_bash_bin }}"
+    threshold_s: "{{ ts_bash_health_threshold_s }}"
   when: ts_bash_health_check | bool
   tags: [bash_verify]

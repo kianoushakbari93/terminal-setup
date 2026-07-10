@@ -12,7 +12,18 @@ import subprocess
 import time
 from typing import List
 
-_ANSI_RE = re.compile(r"\x1b\[[0-9;?]*[A-Za-z]")
+# Terminal escape sequences to strip: CSI styling, OSC (titles and the
+# shell-integration prompt marks Fedora/VTE inject, BEL- or ST-terminated,
+# tolerating truncation at a buffer edge), DCS/SOS/PM/APC strings, charset
+# selection, and keypad modes. Shell-integration OSC marks would otherwise
+# glue themselves to probe marker lines and break line-anchored parsing.
+_ANSI_RE = re.compile(
+    r"\x1b\[[0-9;?]*[A-Za-z]"                # CSI
+    r"|\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)?"   # OSC
+    r"|\x1b[PX^_][^\x1b]*(?:\x1b\\)?"        # DCS/SOS/PM/APC
+    r"|\x1b[()][0-9A-Za-z]"                  # charset selection
+    r"|\x1b[=>]"                             # keypad modes
+)
 
 # Shell/plugin output indicating a genuine problem (not benign chatter).
 _ERROR_RE = re.compile(

@@ -19,6 +19,8 @@ SANDBOX = Path(tempfile.mkdtemp(prefix="ts-smoke-"))
 SANDBOX_VARS = {
     "ts_fonts": [],
     "ts_packages": [],
+    # frameworks: detect/remove under the sandbox HOME, never the real one.
+    "ts_frameworks_home": str(SANDBOX),
     "ts_zsh_rc": str(SANDBOX / ".zshrc"),
     "ts_zsh_p10k": str(SANDBOX / ".p10k.zsh"),
     "ts_zsh_zdotdir": str(SANDBOX),
