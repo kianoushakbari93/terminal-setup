@@ -96,3 +96,17 @@ def test_paths_derive_share_and_font_dirs_per_os():
     lin = pkg.resolve_paths(os_family="linux", brew_prefix="/home/linuxbrew/.linuxbrew")
     assert lin.share_dir == "/home/linuxbrew/.linuxbrew/share"
     assert lin.font_dir.endswith(".local/share/fonts")
+
+
+def test_brew_commands_can_pin_an_absolute_brew_path():
+    # The invoking shell may not have the brew prefix on PATH; a pinned path
+    # keeps probe and install working regardless.
+    brew = "/home/linuxbrew/.linuxbrew/bin/brew"
+    assert pkg.is_installed_cmd("brew", "tmux", brew_bin=brew) == [
+        brew, "list", "--formula", "tmux",
+    ]
+    assert pkg.install_cmd("brew", "tmux", brew_bin=brew) == [brew, "install", "tmux"]
+
+
+def test_native_manager_commands_ignore_brew_bin():
+    assert pkg.is_installed_cmd("apt", "tmux", brew_bin="/x/brew") == ["dpkg", "-s", "tmux"]

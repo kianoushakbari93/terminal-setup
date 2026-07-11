@@ -99,6 +99,14 @@ def run_bash_health(
     output = ts_pty.run_in_pty([bash_bin, "-i"], env, stdin_data=probe_input)
     elapsed = time.monotonic() - start
 
+    if elapsed >= threshold_s:
+        # ble.sh keeps compiling its one-time caches in the background across
+        # the first few launches, so a slow first measurement may not be steady
+        # state yet: re-measure once before declaring the startup slow.
+        start = time.monotonic()
+        output = ts_pty.run_in_pty([bash_bin, "-i"], env, stdin_data=probe_input)
+        elapsed = time.monotonic() - start
+
     def _read(path):
         if os.path.exists(path):
             with open(path, encoding="utf-8") as fh:

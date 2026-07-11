@@ -10,6 +10,7 @@ from __future__ import annotations
 import os
 import re
 import subprocess
+import time
 from dataclasses import dataclass
 from typing import Dict, List
 
@@ -58,6 +59,12 @@ def run_tmux_health(
     env = dict(os.environ)
     env["HOME"] = home
     env["TERM"] = env.get("TERM", "xterm-256color")
+    # tpm and the plugins it sources call plain `tmux` from run-shell hooks, so
+    # the server environment must resolve it - guarantee that regardless of the
+    # caller's PATH by prepending the probed binary's own directory.
+    bin_dir = os.path.dirname(tmux_bin)
+    if bin_dir:
+        env["PATH"] = bin_dir + os.pathsep + env.get("PATH", "")
     plugins_root = plugins_root or os.path.join(home, ".tmux", "plugins")
 
     def tmux(*args):
@@ -71,7 +78,15 @@ def run_tmux_health(
 
     status_right = window_format = ""
     if config_ok:
-        status_right = tmux("display-message", "-p", "#{E:status-right}").stdout
+        # The config's `run tpm` loads plugins asynchronously; the catppuccin
+        # status modules appear only once that finishes. Poll briefly instead
+        # of failing on a not-yet-populated status line.
+        deadline = time.monotonic() + 5.0
+        while True:
+            status_right = tmux("display-message", "-p", "#{E:status-right}").stdout
+            if re.search(r"\d", status_right) or time.monotonic() >= deadline:
+                break
+            time.sleep(0.2)
         window_format = tmux("display-message", "-p", "#{window-status-current-format}").stdout
     tmux("kill-server")
 

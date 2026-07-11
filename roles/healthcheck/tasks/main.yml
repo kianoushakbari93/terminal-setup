@@ -3,7 +3,7 @@
 # so a broken terminal is never reported as success.
 - name: Run terminal health suite
   ansible.builtin.command:
-    cmd: "{{ ts_python }} -m tooling.terminal_setup.healthcheck_cli"
+    cmd: "{{ ts_python }} -m tooling.terminal_setup.healthcheck_cli{{ '' if ts_healthcheck_deep | default(true) else ' --no-deep' }}"
   environment:
     PYTHONPATH: "{{ ts_repo_dir }}"
   args:

@@ -23,3 +23,38 @@
   # In check mode no install ran, so post-install verification is meaningless.
   when: not ansible_check_mode
   tags: [fonts_verify]
+
+# GNOME terminals default to the system monospace font, which has no powerline
+# glyphs; set their profile font to a Nerd Font (Linux analog of iterm2 role).
+# Idempotent: only writes (and only reports changed) when a value differs.
+- name: Configure terminal font (GNOME Terminal / Ptyxis)
+  ansible.builtin.shell: |
+    set -eu
+    command -v gsettings >/dev/null 2>&1 || { echo "result=skipped-no-gsettings"; exit 0; }
+    changed=0
+    set_kv() {
+      schema="$1"; key="$2"; want="$3"
+      cur="$(gsettings get "$schema" "$key" 2>/dev/null | tr -d \')" || return 0
+      [ "$cur" = "$want" ] && return 0
+      gsettings set "$schema" "$key" "$want"
+      changed=1
+    }
+    if gsettings list-schemas | grep -qx org.gnome.Ptyxis; then
+      set_kv org.gnome.Ptyxis use-system-font false
+      set_kv org.gnome.Ptyxis font-name "{{ ts_terminal_font }}"
+    fi
+    if gsettings list-schemas | grep -qx org.gnome.Terminal.ProfilesList; then
+      uuid="$(gsettings get org.gnome.Terminal.ProfilesList default | tr -d \')"
+      base="org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles:/:${uuid}/"
+      set_kv "$base" use-system-font false
+      set_kv "$base" font "{{ ts_terminal_font }}"
+    fi
+    echo "result=changed=${changed}"
+  args:
+    executable: /bin/bash
+  register: ts_term_font
+  changed_when: "'result=changed=1' in ts_term_font.stdout"
+  when:
+    - ansible_facts['system'] | default('') == 'Linux'
+    - ts_terminal_font_configure | bool
+  tags: [fonts_terminal]

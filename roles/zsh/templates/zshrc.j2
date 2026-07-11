@@ -3,19 +3,21 @@
 #  Fast, framework-free zsh + Powerlevel10k
 # =========================================
 
-# 1. Auto-start tmux (must stay ABOVE the p10k instant-prompt block)
-if [[ -z "$TMUX" && -n "$PS1" && "$TERM_PROGRAM" != "vscode" ]]; then
+# 1. PATH (GNU sed overrides macOS BSD sed; brew stack explicit - login
+#    shells do not inherit it, and tmux/starship live there, so this must
+#    precede the tmux auto-start; ~/.local/bin)
+path=("{{ ts_brew_prefix }}/opt/gnu-sed/libexec/gnubin" "{{ ts_brew_prefix }}/bin" "$HOME/.local/bin" $path)
+export PATH
+
+# 2. Auto-start tmux (must stay ABOVE the p10k instant-prompt block)
+if (( $+commands[tmux] )) && [[ -z "$TMUX" && -n "$PS1" && "$TERM_PROGRAM" != "vscode" ]]; then
   tmux attach -t default 2>/dev/null || tmux new -s default
 fi
 
-# 2. Powerlevel10k instant prompt (keep near the top)
+# 3. Powerlevel10k instant prompt (keep near the top)
 if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
-
-# 3. PATH (GNU sed overrides macOS BSD sed; ~/.local/bin)
-path=("{{ ts_brew_prefix }}/opt/gnu-sed/libexec/gnubin" "$HOME/.local/bin" $path)
-export PATH
 
 # 4. Prompt: Powerlevel10k
 source {{ ts_brew_prefix }}/share/powerlevel10k/powerlevel10k.zsh-theme

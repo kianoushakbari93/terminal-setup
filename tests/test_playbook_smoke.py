@@ -18,6 +18,8 @@ PLAYBOOK = ["-i", "inventory/localhost.yml", "site.yml"]
 SANDBOX = Path(tempfile.mkdtemp(prefix="ts-smoke-"))
 SANDBOX_VARS = {
     "ts_fonts": [],
+    # never touch the host's real terminal-emulator font in the smoke run
+    "ts_terminal_font_configure": False,
     "ts_packages": [],
     # frameworks: detect/remove under the sandbox HOME, never the real one.
     "ts_frameworks_home": str(SANDBOX),
@@ -36,6 +38,10 @@ SANDBOX_VARS = {
     "ts_tmux_conf": str(SANDBOX / ".tmux.conf"),
     "ts_tmux_install_plugins": False,
     "ts_tmux_health_check": False,
+    # never change the host's real login shell in the smoke run
+    "ts_chsh_enabled": False,
+    # the sandbox never provisioned the live HOME, so skip the deep probes
+    "ts_healthcheck_deep": False,
     # never touch the real iTerm2 prefs in the smoke run
     "skip_iterm2": True,
     "ts_backup_root": str(SANDBOX / "backups"),

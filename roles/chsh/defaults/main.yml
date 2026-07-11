@@ -1,0 +1,4 @@
+---
+# Change the login shell to zsh. Disable for sandboxed runs (smoke tests) that
+# must never mutate the host.
+ts_chsh_enabled: true

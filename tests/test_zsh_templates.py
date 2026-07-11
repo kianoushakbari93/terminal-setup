@@ -87,3 +87,10 @@ def test_zshrc_highlight_styles_are_catppuccin_from_vars():
     assert "ZSH_HIGHLIGHT_STYLES[command]='fg=#a6e3a1'" in out
     assert "ZSH_HIGHLIGHT_STYLES[unknown-token]='fg=#f38ba8,bold'" in out
     assert "ZSH_HIGHLIGHT_STYLES[double-hyphen-option]='fg=#89dceb'" in out
+
+
+def test_zshrc_exports_brew_path_before_tmux_autostart():
+    # A fresh login shell has no brew prefix on PATH; if the tmux auto-start
+    # runs first, `tmux` is not found and the session never starts.
+    out = render("zshrc.j2", ts_zsh_palette=MOCHA, ts_brew_prefix="/opt/homebrew")
+    assert out.index("/opt/homebrew/bin") < out.index("tmux attach")

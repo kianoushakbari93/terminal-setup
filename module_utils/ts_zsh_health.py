@@ -90,6 +90,14 @@ def run_zsh_health(
     output = ts_pty.run_in_pty([zsh_bin, "-i", "-c", PROBE_SNIPPET], env)
     elapsed = time.monotonic() - start
 
+    if elapsed >= threshold_s:
+        # One-time cold init (compinit cache build, gitstatusd download) can
+        # bleed past the single warm-up on slow hosts: re-measure once before
+        # declaring the startup slow.
+        start = time.monotonic()
+        output = ts_pty.run_in_pty([zsh_bin, "-i", "-c", PROBE_SNIPPET], env)
+        elapsed = time.monotonic() - start
+
     p10k_path = os.path.join(zdotdir, ".p10k.zsh")
     p10k_text = ""
     if os.path.exists(p10k_path):

@@ -8,7 +8,7 @@
 # manager on Linux. Empty on macOS, where it is not needed.
 - name: Determine distro id
   ansible.builtin.set_fact:
-    ts_distro: "{{ ansible_distribution | default('') | lower }}"
+    ts_distro: "{{ ansible_facts['distribution'] | default('') | lower }}"
 
 # Install each logical package via the correct manager, idempotently.
 - name: Install packages
@@ -21,11 +21,17 @@
   loop_control:
     label: "{{ item.name }} ({{ item.kind }})"
 
-# Health probe: every package that declares a `check` command must resolve on PATH.
+# Health probe: every package that declares a `check` command must resolve on
+# PATH. `command -v` is a shell builtin, so this must be the shell module
+# (`executable` is unsupported on the command module since Ansible 2.4). The
+# brew prefix is prepended so verification also passes when the invoking shell
+# does not have Homebrew/Linuxbrew on PATH yet (e.g. re-runs before re-login).
 - name: Verify packages resolve on PATH
-  ansible.builtin.command: "command -v {{ item.check }}"
+  ansible.builtin.shell: "command -v {{ item.check }}"
   args:
     executable: /bin/bash
+  environment:
+    PATH: "{{ ts_brew_prefix }}/bin:{{ ansible_facts['env']['PATH'] | default(lookup('env', 'PATH')) }}"
   changed_when: false
   loop: "{{ ts_packages | selectattr('check', 'defined') | list }}"
   loop_control:

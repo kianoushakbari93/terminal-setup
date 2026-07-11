@@ -39,17 +39,34 @@ notice:
 """
 
 import os
+import platform
 import pwd
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils import ts_shell
 
 
-def _current_shell():
+def _current_user():
     try:
-        return pwd.getpwuid(os.getuid()).pw_shell
+        return pwd.getpwuid(os.getuid())
     except Exception:
-        return os.environ.get("SHELL", "")
+        return None
+
+
+def _current_shell():
+    entry = _current_user()
+    if entry is not None:
+        return entry.pw_shell
+    return os.environ.get("SHELL", "")
+
+
+def _shell_registered(target_shell):
+    try:
+        with open("/etc/shells", "r") as fh:
+            registered = {line.strip() for line in fh if line.strip() and not line.startswith("#")}
+    except OSError:
+        return False
+    return target_shell in registered
 
 
 def main():
@@ -61,13 +78,28 @@ def main():
         supports_check_mode=True,
     )
     current = module.params["current_shell"] or _current_shell()
-    plan = ts_shell.plan_chsh(current_shell=current, target_shell=module.params["target_shell"])
+    target = module.params["target_shell"]
+    entry = _current_user()
+    plan = ts_shell.plan_chsh(
+        current_shell=current,
+        target_shell=target,
+        os_family="linux" if platform.system() == "Linux" else "macos",
+        user=entry.pw_name if entry is not None else None,
+        shell_registered=_shell_registered(target),
+    )
 
     if not plan.needs_change:
         module.exit_json(changed=False, msg="login shell is already zsh")
 
     if module.check_mode:
         module.exit_json(changed=True, notice=plan.notice)
+
+    if plan.register_command:
+        rc, out, err = module.run_command(plan.register_command)
+        if rc != 0:
+            module.fail_json(
+                msg="registering %s in /etc/shells failed: %s" % (target, err.strip() or out.strip())
+            )
 
     rc, out, err = module.run_command(plan.command)
     if rc != 0:

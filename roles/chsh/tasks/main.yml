@@ -1,18 +1,34 @@
 ---
-# Locate a zsh to use as the login shell.
-- name: Locate zsh
-  ansible.builtin.command: which zsh
-  register: ts_zsh_path
-  changed_when: false
+# The whole role is skippable (ts_chsh_enabled=false) so sandboxed runs - e.g.
+# the playbook smoke tests - never touch the host's real login shell.
+- name: Change the login shell to zsh
+  when: ts_chsh_enabled | bool
+  block:
+    # Ensure per-OS path facts exist when this role runs in isolation.
+    - name: Ensure per-OS path facts
+      ts_platform_facts:
+      when: ts_brew_prefix is not defined
 
-# Set zsh as the default shell (skips when already zsh).
-- name: Set zsh as the default login shell
-  set_default_shell:
-    target_shell: "{{ ts_login_shell | default(ts_zsh_path.stdout) }}"
-  register: ts_chsh
+    # Locate a zsh to use as the login shell. The brew prefix is prepended so
+    # the stack zsh is found even when the invoking shell does not have
+    # Homebrew / Linuxbrew on PATH yet (e.g. re-runs before re-login).
+    - name: Locate zsh
+      ansible.builtin.shell: command -v zsh
+      args:
+        executable: /bin/bash
+      environment:
+        PATH: "{{ ts_brew_prefix }}/bin:{{ ansible_facts['env']['PATH'] | default(lookup('env', 'PATH')) }}"
+      register: ts_zsh_path
+      changed_when: false
 
-# Tell the user to re-login when the shell actually changed.
-- name: Notify that a fresh login is needed
-  ansible.builtin.debug:
-    msg: "{{ ts_chsh.notice }}"
-  when: ts_chsh.notice is defined and ts_chsh.notice
+    # Set zsh as the default shell (skips when already zsh).
+    - name: Set zsh as the default login shell
+      set_default_shell:
+        target_shell: "{{ ts_login_shell | default(ts_zsh_path.stdout) }}"
+      register: ts_chsh
+
+    # Tell the user to re-login when the shell actually changed.
+    - name: Notify that a fresh login is needed
+      ansible.builtin.debug:
+        msg: "{{ ts_chsh.notice }}"
+      when: (ts_chsh.notice | default('') | length) > 0

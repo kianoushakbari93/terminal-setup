@@ -7,4 +7,4 @@
 ts_uninstall_frameworks: true
 
 # Overridable for tests: the HOME to detect/remove under.
-ts_frameworks_home: "{{ ansible_user_dir }}"
+ts_frameworks_home: "{{ ansible_facts['user_dir'] }}"

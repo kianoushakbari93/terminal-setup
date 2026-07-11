@@ -26,5 +26,6 @@
 - name: Verify zsh is healthy
   zsh_health:
     zdotdir: "{{ ts_zsh_zdotdir }}"
+    zsh_bin: "{{ ts_zsh_bin }}"
   when: ts_zsh_health_check | bool
   tags: [zsh_verify]

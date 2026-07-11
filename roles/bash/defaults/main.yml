@@ -1,10 +1,10 @@
 ---
 # Deploy targets (overridable for testing).
-ts_bash_rc: "{{ ansible_user_dir }}/.bashrc"
-ts_bash_profile: "{{ ansible_user_dir }}/.bash_profile"
-ts_starship_toml: "{{ ansible_user_dir }}/.config/starship.toml"
-ts_bash_home: "{{ ansible_user_dir }}"
-ts_blesh_dir: "{{ ansible_user_dir }}/.local/share/blesh"
+ts_bash_rc: "{{ ansible_facts['user_dir'] }}/.bashrc"
+ts_bash_profile: "{{ ansible_facts['user_dir'] }}/.bash_profile"
+ts_starship_toml: "{{ ansible_facts['user_dir'] }}/.config/starship.toml"
+ts_bash_home: "{{ ansible_facts['user_dir'] }}"
+ts_blesh_dir: "{{ ansible_facts['user_dir'] }}/.local/share/blesh"
 
 # bash 4+ is required for ble.sh; on macOS that is the Homebrew bash.
 ts_bash_bin: "{{ ts_brew_prefix }}/bin/bash"

@@ -5,3 +5,9 @@ ts_fonts:
   - meslo
   - jetbrains
   - firacode
+
+# Point GNOME terminals (GNOME Terminal, Ptyxis) at a Nerd Font so the rendered
+# prompts match the screenshots - the Linux analog of the iterm2 role. Skipped
+# automatically when gsettings (or the terminal's schema) is absent.
+ts_terminal_font_configure: true
+ts_terminal_font: "MesloLGS Nerd Font 12"

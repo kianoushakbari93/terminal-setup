@@ -58,6 +58,7 @@ name:
   type: str
 """
 
+import os
 import platform
 
 from ansible.module_utils.basic import AnsibleModule
@@ -92,8 +93,15 @@ def main():
             p["name"], kind=p["kind"], os_family=os_family,
             distro=p["distro"], package_map=p["package_map"],
         )
-        probe = pkg.is_installed_cmd(res.manager, res.name)
-        install = pkg.install_cmd(res.manager, res.name)
+        # Pin brew to its absolute path: the invoking shell may not have the
+        # brew prefix on PATH (fresh installs, re-runs before re-login).
+        brew_bin = os.path.join(
+            pkg.brew_prefix(os_family, platform.machine()), "bin", "brew"
+        )
+        if not os.path.exists(brew_bin):
+            brew_bin = None
+        probe = pkg.is_installed_cmd(res.manager, res.name, brew_bin=brew_bin)
+        install = pkg.install_cmd(res.manager, res.name, brew_bin=brew_bin)
         sudo = pkg.needs_sudo(res.manager)
     except (pkg.UnsupportedPlatform, ValueError) as exc:
         module.fail_json(msg="package resolution failed: %s" % exc)

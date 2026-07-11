@@ -135,14 +135,24 @@ def _require_manager(manager: str) -> None:
         )
 
 
-def is_installed_cmd(manager: str, name: str):
+def is_installed_cmd(manager: str, name: str, brew_bin: Optional[str] = None):
+    """Build the is-installed probe. ``brew_bin`` pins brew to an absolute path
+    so the probe works when the caller's PATH lacks the brew prefix (fresh
+    installs, re-runs before re-login)."""
     _require_manager(manager)
-    return _IS_INSTALLED[manager](name)
+    cmd = _IS_INSTALLED[manager](name)
+    if manager == "brew" and brew_bin:
+        cmd[0] = brew_bin
+    return cmd
 
 
-def install_cmd(manager: str, name: str):
+def install_cmd(manager: str, name: str, brew_bin: Optional[str] = None):
+    """Build the install command; ``brew_bin`` as in ``is_installed_cmd``."""
     _require_manager(manager)
-    return _INSTALL[manager](name)
+    cmd = _INSTALL[manager](name)
+    if manager == "brew" and brew_bin:
+        cmd[0] = brew_bin
+    return cmd
 
 
 def needs_sudo(manager: str) -> bool:

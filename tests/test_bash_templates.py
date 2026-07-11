@@ -66,3 +66,10 @@ def test_bashrc_ble_faces_are_dracula_from_vars():
 def test_bash_profile_sources_bashrc():
     out = render("bash_profile.j2", ts_bash_palette=DRACULA, ts_brew_prefix="/opt/homebrew")
     assert "~/.bashrc" in out
+
+
+def test_bashrc_exports_brew_path_before_tmux_autostart():
+    # A fresh login shell has no brew prefix on PATH; if the tmux auto-start
+    # runs first, `tmux` is not found and the session never starts.
+    out = render("bashrc.j2", ts_bash_palette=DRACULA, ts_brew_prefix="/opt/homebrew")
+    assert out.index("/opt/homebrew/bin") < out.index("exec tmux")

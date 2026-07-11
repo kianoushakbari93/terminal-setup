@@ -41,6 +41,7 @@ ts_packages:
   - { name: bash, kind: stack, check: bash }
   - { name: starship, kind: stack, check: starship }
   - { name: bash-completion, kind: stack }
+  - { name: gawk, kind: stack, check: gawk }   # ble.sh build dependency
   # tmux stack (tpm + plugins are installed by the tmux role)
   - { name: tmux, kind: stack, check: tmux }
 

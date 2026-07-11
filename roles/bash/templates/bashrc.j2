@@ -9,18 +9,20 @@ case $- in
     *) return ;;
 esac
 
-# 1. Auto-start tmux (replaces this shell; keep above everything else)
+# 1. PATH (match zsh: GNU sed first, then the brew stack, then ~/.local/bin -
+#    the brew bin dir must be explicit: login shells do not inherit it, and
+#    tmux/starship live there, so this must precede the tmux auto-start)
+export PATH="{{ ts_brew_prefix }}/opt/gnu-sed/libexec/gnubin:{{ ts_brew_prefix }}/bin:$HOME/.local/bin:$PATH"
+
+# 2. Auto-start tmux (replaces this shell; keep above everything else below)
 if command -v tmux &> /dev/null && [ -z "$TMUX" ] \
    && [[ ! "$TERM" =~ (screen|tmux) ]] && [ "$TERM_PROGRAM" != "vscode" ]; then
   exec tmux new-session -A -s default
 fi
 
-# 2. ble.sh (Bash Line Editor) - load at the top with --noattach,
+# 3. ble.sh (Bash Line Editor) - load at the top with --noattach,
 #    then attach at the very bottom (required ordering).
 [[ -r ~/.local/share/blesh/ble.sh ]] && source ~/.local/share/blesh/ble.sh --noattach
-
-# 3. PATH (match zsh: GNU sed first, then ~/.local/bin)
-export PATH="{{ ts_brew_prefix }}/opt/gnu-sed/libexec/gnubin:$HOME/.local/bin:$PATH"
 
 # 4. History
 HISTFILE="$HOME/.bash_history"

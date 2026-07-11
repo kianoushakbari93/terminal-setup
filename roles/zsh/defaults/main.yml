@@ -1,8 +1,8 @@
 ---
 # Deploy targets (overridable for testing).
-ts_zsh_rc: "{{ ansible_user_dir }}/.zshrc"
-ts_zsh_p10k: "{{ ansible_user_dir }}/.p10k.zsh"
-ts_zsh_zdotdir: "{{ ansible_user_dir }}"
+ts_zsh_rc: "{{ ansible_facts['user_dir'] }}/.zshrc"
+ts_zsh_p10k: "{{ ansible_facts['user_dir'] }}/.p10k.zsh"
+ts_zsh_zdotdir: "{{ ansible_facts['user_dir'] }}"
 
 # Catppuccin Mocha palette - the single source of truth for the zsh prompt and
 # syntax-highlight colours. Change here to retheme without touching templates.
@@ -33,6 +33,10 @@ ts_zsh_palette:
   base: "#1e1e2e"
   mantle: "#181825"
   crust: "#11111b"
+
+# The stack zsh; resolved explicitly because the invoking shell may not have
+# the brew prefix on PATH (e.g. first run, or re-runs before re-login).
+ts_zsh_bin: "{{ ts_brew_prefix }}/bin/zsh"
 
 # Run the deep zsh health probe after deploy (disable in unit-style runs).
 ts_zsh_health_check: true

@@ -10,6 +10,8 @@
     path: "{{ ts_blesh_dir }}/ble.sh"
   register: ts_blesh
 
+# The brew prefix is prepended so the build finds its stack dependencies
+# (gawk) even when the invoking shell does not have brew on PATH.
 - name: Install ble.sh
   ansible.builtin.shell: |
     set -e
@@ -17,6 +19,8 @@
     git clone --recursive --depth 1 https://github.com/akinomyoga/ble.sh.git "$tmp/ble.sh"
     make -C "$tmp/ble.sh" install PREFIX="{{ ts_bash_home }}/.local"
     rm -rf "$tmp"
+  environment:
+    PATH: "{{ ts_brew_prefix }}/bin:{{ ansible_facts['env']['PATH'] | default(lookup('env', 'PATH')) }}"
   when: not ts_blesh.stat.exists
   tags: [bash_install]
 

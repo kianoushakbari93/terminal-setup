@@ -24,4 +24,20 @@ def test_returns_nonzero_when_a_probe_fails(capsys):
 def test_default_probes_has_at_least_one_named_probe():
     probes = healthcheck_cli.build_default_probes()
     assert len(probes) >= 1
-    assert all(p.name for p in probes)
+    assert all(
+        p.section if isinstance(p, hc.ProbeGroup) else p.name for p in probes
+    )
+
+
+def test_default_probes_include_the_deep_shell_sections():
+    probes = healthcheck_cli.build_default_probes()
+    sections = {p.section for p in probes if isinstance(p, hc.ProbeGroup)}
+    assert sections == {"zsh", "bash", "tmux"}
+
+
+def test_no_deep_flag_drops_the_probe_groups(capsys):
+    code = healthcheck_cli.main(argv=["--no-deep"])
+    out = capsys.readouterr().out
+    assert code == 0
+    assert "python runtime" in out
+    assert "tmux" not in out

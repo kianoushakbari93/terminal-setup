@@ -39,3 +39,27 @@ def test_probe_that_raises_is_reported_as_failure_not_crash():
     report = hc.run([hc.Probe("flaky", boom)])
     assert report.ok is False
     assert "unexpected blow up" in report.render()
+
+
+def test_probe_group_outcomes_are_sectioned_in_the_summary():
+    class _O:
+        def __init__(self, name, ok, detail=""):
+            self.name, self.ok, self.detail = name, ok, detail
+
+    group = hc.ProbeGroup("zsh", lambda: [_O("clean login", True), _O("p10k loaded", True)])
+    report = hc.run([passing("python runtime"), group])
+    assert report.ok is True
+    summary = report.render()
+    # The section header precedes its indented outcomes.
+    z = summary.index("\nzsh\n")
+    assert summary.index("clean login") > z
+    assert "all checks passed" in summary
+
+
+def test_probe_group_error_is_a_failure_not_a_crash():
+    def boom():
+        raise RuntimeError("engine exploded")
+
+    report = hc.run([hc.ProbeGroup("tmux", boom)])
+    assert report.ok is False
+    assert "engine exploded" in report.render()

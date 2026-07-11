@@ -1,8 +1,8 @@
 ---
 # Deploy target (overridable for testing).
-ts_tmux_conf: "{{ ansible_user_dir }}/.tmux.conf"
-ts_tmux_home: "{{ ansible_user_dir }}"
-ts_tmux_plugins_dir: "{{ ansible_user_dir }}/.tmux/plugins"
+ts_tmux_conf: "{{ ansible_facts['user_dir'] }}/.tmux.conf"
+ts_tmux_home: "{{ ansible_facts['user_dir'] }}"
+ts_tmux_plugins_dir: "{{ ansible_facts['user_dir'] }}/.tmux/plugins"
 ts_tmux_bin: "{{ ts_brew_prefix }}/bin/tmux"
 
 # Catppuccin flavor and palette - the single source of truth for the status bar.
