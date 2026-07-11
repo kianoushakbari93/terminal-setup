@@ -29,7 +29,9 @@ ts_package_map:
     brew: bash-completion@2
 
 # Logical packages installed by the `packages` role. The shell slices append
-# their stack/prereq entries here. Installed via Homebrew/Linuxbrew (stack).
+# their stack/prereq entries here. Installed via Homebrew/Linuxbrew (stack) or
+# the native manager (prereq). An optional `os` key (linux|macos) restricts an
+# entry to that platform.
 ts_packages:
   # zsh stack
   - { name: zsh, kind: stack, check: zsh }
@@ -44,6 +46,11 @@ ts_packages:
   - { name: gawk, kind: stack, check: gawk }   # ble.sh build dependency
   # tmux stack (tpm + plugins are installed by the tmux role)
   - { name: tmux, kind: stack, check: tmux }
+  # Clipboard backends for tmux-yank - Linux only, macOS ships pbcopy.
+  # wl-clipboard serves Wayland sessions, xsel serves X11; tmux-yank picks
+  # whichever matches the running session.
+  - { name: wl-clipboard, kind: prereq, os: linux, check: wl-copy }
+  - { name: xsel, kind: prereq, os: linux, check: xsel }
 
 # Toggle for the macOS iTerm2 role (wired in a later slice).
 skip_iterm2: false

@@ -1,11 +1,32 @@
 ---
+# sudo is only needed for prereq packages that are actually missing, so probe
+# each one first: a fully provisioned host must re-run cleanly without cached
+# sudo credentials. Entries without a `check` command count as missing
+# (command -v '' fails), which conservatively requires sudo.
+- name: Determine current OS family
+  ansible.builtin.set_fact:
+    ts_preflight_os: "{{ 'macos' if ansible_facts['system'] | default('Linux') == 'Darwin' else 'linux' }}"
+
+- name: Probe for missing prereq packages
+  ansible.builtin.shell: "command -v {{ item.check | default('') | quote }}"
+  args:
+    executable: /bin/bash
+  register: ts_prereq_probe
+  changed_when: false
+  failed_when: false
+  check_mode: false
+  when: (item.os | default(ts_preflight_os)) == ts_preflight_os
+  loop: "{{ ts_packages | default([]) | selectattr('kind', 'equalto', 'prereq') | list }}"
+  loop_control:
+    label: "{{ item.name }}"
+
 # Pre-flight gate: run the environment validation CLI. It reports EVERY problem
 # at once and exits non-zero, which fails the play before any change-making role.
 - name: Run pre-flight environment checks
   ansible.builtin.command:
     cmd: >-
       {{ ts_python }} -m tooling.terminal_setup.preflight_cli
-      --prereq-count {{ ts_packages | default([]) | selectattr('kind', 'equalto', 'prereq') | list | length }}
+      --prereq-count {{ ts_prereq_probe.results | default([]) | selectattr('rc', 'defined') | selectattr('rc', 'ne', 0) | list | length }}
   environment:
     PYTHONPATH: "{{ ts_repo_dir }}"
   args:

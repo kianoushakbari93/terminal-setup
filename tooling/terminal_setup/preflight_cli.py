@@ -25,7 +25,8 @@ MANAGED_TARGETS = [
 
 def build_default_checks(prereq_count: Optional[int] = None) -> List[preflight.Check]:
     # sudo is only required where the native package manager needs it: Linux,
-    # and only when the run will actually install prereq-kind packages with it.
+    # and only when the run will actually install prereq-kind packages with it
+    # (the playbook passes the count of prereqs that are missing on the host).
     # The Homebrew/Linuxbrew stack and all config deployment run unprivileged,
     # and macOS provisions the terminal stack via Homebrew without elevation.
     # When the caller does not say how many prereq packages the run carries
@@ -56,8 +57,9 @@ def main(argv: Optional[List[str]] = None, checks: Optional[List[preflight.Check
         "--prereq-count",
         type=int,
         default=None,
-        help="Number of prereq-kind packages the run installs via the native "
-        "package manager; sudo is only required when this is non-zero on Linux.",
+        help="Number of prereq-kind packages the run still needs to install via "
+        "the native package manager; sudo is only required when this is "
+        "non-zero on Linux.",
     )
     # argv=None means a real CLI invocation: let argparse read sys.argv.
     args = parser.parse_args(argv)

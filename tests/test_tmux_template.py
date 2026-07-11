@@ -52,13 +52,23 @@ def test_status_background_is_transparent():
     assert "status-justify left" in out
 
 
+def test_yank_selections_target_system_clipboard():
+    out = render("tmux.conf.j2", **ctx())
+    # Mouse yank defaults to the X11 primary selection, which terminal Paste
+    # cannot see; both keyboard and mouse must land in the system clipboard.
+    assert "set -g @yank_selection 'clipboard'" in out
+    assert "set -g @yank_selection_mouse 'clipboard'" in out
+
+
 def test_battery_module_used_when_host_has_battery():
     out = render("tmux.conf.j2", **ctx(ts_tmux_has_battery=True))
     assert "@catppuccin_status_battery" in out
+    assert "set -g @plugin 'tmux-plugins/tmux-battery'" in out
 
 
-def test_batteryless_host_falls_back_to_cpu_spacer():
+def test_batteryless_host_omits_battery_entirely():
     out = render("tmux.conf.j2", **ctx(ts_tmux_has_battery=False))
-    # No battery module (it would render empty); a CPU/load spacer instead.
+    # No battery status item and no tmux-battery plugin: on a batteryless host
+    # (e.g. a VM) the item would render as garbage, so it is dropped outright.
     assert "@catppuccin_status_battery" not in out
-    assert "load average" in out
+    assert "tmux-battery" not in out

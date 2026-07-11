@@ -10,13 +10,15 @@
   ansible.builtin.set_fact:
     ts_distro: "{{ ansible_facts['distribution'] | default('') | lower }}"
 
-# Install each logical package via the correct manager, idempotently.
+# Install each logical package via the correct manager, idempotently. Entries
+# with an `os` key only apply to that platform (e.g. Linux-only clipboard tools).
 - name: Install packages
   package_install:
     name: "{{ item.name }}"
     kind: "{{ item.kind }}"
     package_map: "{{ ts_package_map }}"
     distro: "{{ ts_distro | default(omit) }}"
+  when: (item.os | default(ts_os_family)) == ts_os_family
   loop: "{{ ts_packages }}"
   loop_control:
     label: "{{ item.name }} ({{ item.kind }})"
@@ -33,6 +35,7 @@
   environment:
     PATH: "{{ ts_brew_prefix }}/bin:{{ ansible_facts['env']['PATH'] | default(lookup('env', 'PATH')) }}"
   changed_when: false
+  when: (item.os | default(ts_os_family)) == ts_os_family
   loop: "{{ ts_packages | selectattr('check', 'defined') | list }}"
   loop_control:
     label: "{{ item.check }}"

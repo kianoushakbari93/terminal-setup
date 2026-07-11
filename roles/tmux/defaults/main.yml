@@ -16,7 +16,7 @@ ts_tmux_palette:
   surface1: "#45475a"
   fg: "#cdd6f4"
 
-# tmux plugins managed by tpm.
+# tmux plugins managed by tpm (tmux-battery is only declared on hosts with a battery).
 ts_tmux_plugin_repos:
   - tmux-plugins/tmux-sensible
   - tmux-plugins/tmux-yank

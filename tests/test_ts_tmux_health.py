@@ -54,3 +54,9 @@ def test_missing_plugin_fails_probe():
     ))
     assert by["required plugins present"].ok is False
     assert "catppuccin" in by["required plugins present"].detail
+
+
+def test_battery_plugin_required_only_when_conf_declares_it():
+    assert th.battery_required("set -g @plugin 'tmux-plugins/tmux-battery'") is True
+    # Batteryless render: the plugin line is omitted, so it must not be required.
+    assert th.battery_required("set -g @plugin 'catppuccin/tmux'") is False

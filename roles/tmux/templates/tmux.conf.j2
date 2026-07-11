@@ -19,7 +19,15 @@ set -g @plugin 'tmux-plugins/tpm'
 set -g @plugin 'tmux-plugins/tmux-sensible'
 set -g @plugin 'tmux-plugins/tmux-yank'
 set -g @plugin 'catppuccin/tmux'
+{% if ts_tmux_has_battery %}
 set -g @plugin 'tmux-plugins/tmux-battery'
+{% endif %}
+
+# tmux-yank: keyboard yank (y in copy mode) and mouse selection both land in
+# the system clipboard - the mouse default is the X11 primary selection, which
+# Ctrl+Shift+V / "Paste" cannot see.
+set -g @yank_selection 'clipboard'
+set -g @yank_selection_mouse 'clipboard'
 
 # ---------------------------
 # 2. Prefix Key
@@ -121,19 +129,17 @@ set -g  window-status-separator      ''
 
 set -g status-left ''
 
-# Right side: {{ 'battery -> ' if ts_tmux_has_battery else 'cpu spacer -> ' }}date/time -> session
+# Right side: {{ 'battery -> ' if ts_tmux_has_battery else '' }}date/time -> session
+# (batteryless hosts get no battery item at all)
 set -g status-right ''
 {% if ts_tmux_has_battery %}
 set -agF status-right '#{E:@catppuccin_status_battery}'
-{% else %}
-# Batteryless host: battery would render empty, so use a CPU load spacer instead.
-set -ag status-right '#[fg=#{@thm_fg}] #(uptime | sed "s/.*load average[s]*: //") '
 {% endif %}
 set -ag  status-right '#{E:@catppuccin_status_date_time}'
 set -ag  status-right '#{E:@catppuccin_status_session}'
 
 # ---------------------------
-# 10. Initialize TPM (keep at very bottom; loads tmux-battery)
+# 10. Initialize TPM (keep at very bottom; loads the declared plugins)
 # ---------------------------
 run '~/.tmux/plugins/tpm/tpm'
 

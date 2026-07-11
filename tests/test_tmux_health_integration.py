@@ -28,8 +28,12 @@ def test_real_tmux_passes_deep_health_suite(tmp_path):
     env = Environment(loader=FileSystemLoader(str(TPL_DIR)), keep_trailing_newline=True)
     env.filters["glyph"] = glyphs.glyph
     conf = tmp_path / "tmux.conf"
+    # Render to match this host's provisioned state: the provisioner installs
+    # tmux-battery exactly on hosts with a battery, so its presence under the
+    # real plugins dir tells us which variant this host runs.
     conf.write_text(env.get_template("tmux.conf.j2").render(
-        ts_tmux_palette=MOCHA, ts_tmux_flavor="mocha", ts_tmux_has_battery=True,
+        ts_tmux_palette=MOCHA, ts_tmux_flavor="mocha",
+        ts_tmux_has_battery=(PLUGINS / "tmux-battery").is_dir(),
     ))
 
     results = th.run_tmux_health(

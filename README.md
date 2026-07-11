@@ -41,8 +41,10 @@ battery / date-time / session bottom-right, transparent middle:
 - **bash:** starship (Dracula triangles), ble.sh line editor with syntax
   highlighting + autosuggestions, bash-completion@2.
 - **tmux:** tpm + catppuccin + tmux-battery (+ sensible, yank); window tabs,
-  battery / date-time / session, transparent bar; CPU/load fallback on
-  batteryless hosts.
+  battery / date-time / session, transparent bar; on batteryless hosts (e.g.
+  VMs) the battery item and plugin are omitted entirely. Mouse selection and
+  copy-mode `y` land in the system clipboard (wl-clipboard / xsel are installed
+  as prereqs on Linux; macOS uses pbcopy).
 - **Fonts:** MesloLGS, JetBrainsMono and FiraCode Nerd Fonts.
 - **Framework cleanup:** competing prompt frameworks (oh-my-zsh, oh-my-posh)
   are uninstalled so they never fight the rendered prompts - user content

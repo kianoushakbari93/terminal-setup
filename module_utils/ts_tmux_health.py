@@ -18,6 +18,12 @@ from typing import Dict, List
 REQUIRED_CAPS = (0xE0B6, 0xE0B4)
 
 
+def battery_required(conf_text: str) -> bool:
+    """tmux-battery is declared only on hosts with a battery, so the plugin is
+    required exactly when the rendered config loads it."""
+    return "tmux-battery" in conf_text
+
+
 @dataclass(frozen=True)
 class ProbeOutcome:
     name: str
@@ -93,6 +99,12 @@ def run_tmux_health(
     plugins_present = {
         "tpm": os.path.isdir(os.path.join(plugins_root, "tpm")),
         "catppuccin": os.path.exists(os.path.join(plugins_root, "tmux", "catppuccin.tmux")),
-        "battery": os.path.isdir(os.path.join(plugins_root, "tmux-battery")),
     }
+    try:
+        with open(conf_path, encoding="utf-8") as f:
+            conf_text = f.read()
+    except OSError:
+        conf_text = ""
+    if battery_required(conf_text):
+        plugins_present["battery"] = os.path.isdir(os.path.join(plugins_root, "tmux-battery"))
     return parse_tmux_health(config_ok, config_err, status_right, window_format, plugins_present)
