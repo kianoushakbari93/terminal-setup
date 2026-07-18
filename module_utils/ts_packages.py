@@ -23,7 +23,9 @@ _DISTRO_NATIVE = {
     "rocky": "dnf",
     "almalinux": "dnf",
     "arch": "pacman",
+    "archlinux": "pacman",
     "manjaro": "pacman",
+    "endeavouros": "pacman",
 }
 
 

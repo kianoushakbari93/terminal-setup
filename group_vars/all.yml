@@ -41,6 +41,9 @@ ts_packages:
   - { name: zsh-syntax-highlighting, kind: stack }
   # bash stack (ble.sh is installed by the bash role; not a package)
   - { name: bash, kind: stack, check: bash }
+  # ble.sh is built from source by the bash role and needs GNU make; macOS
+  # ships make with the Command Line Tools, so this is a Linux-only prereq.
+  - { name: make, kind: prereq, os: linux, check: make }
   - { name: starship, kind: stack, check: starship }
   - { name: bash-completion, kind: stack }
   - { name: gawk, kind: stack, check: gawk }   # ble.sh build dependency

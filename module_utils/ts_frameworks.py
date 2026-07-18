@@ -20,6 +20,11 @@ FRAMEWORK_SIGNATURES = (
     "oh-my-zsh",
     "zsh_theme",     # oh-my-zsh theme selection; inert but tool-owned territory
     "oh-my-posh",
+    # Manjaro ships its own Powerlevel10k prompt (manjaro-zsh-prompt sources
+    # /usr/share/zsh/p10k.zsh) and zsh config; left in a foreign .zshrc.local
+    # they re-source AFTER the tool's ~/.p10k.zsh and override the theme.
+    "manjaro-zsh-config",
+    "manjaro-zsh-prompt",
 )
 
 
